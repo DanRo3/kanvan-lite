@@ -1,0 +1,1072 @@
+
+<!DOCTYPE html>
+<!-- saved from url=(0025)https://example.com/ -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe Interactivo Moderno: Project Example</title>
+    <script src="./example_files/saved_resource"></script>
+    <script src="./example_files/chart.js"></script>
+    <script src="./example_files/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="./example_files/html2canvas.min.js"></script>
+    <script src="./example_files/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./example_files/css2" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease;
+        }
+        .card.interactive-hover:hover {
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transform: translateY(-4px);
+        }
+        .nav-container {
+            scrollbar-width: none; /* Firefox */
+        }
+        .nav-container::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+        .nav-link.active {
+            border-bottom-color: #0f766e; /* teal-700 */
+            color: #0f766e;
+            font-weight: 600;
+        }
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .priority-badge, .impact-badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            text-transform: capitalize;
+        }
+        .priority-alta { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca;}
+        .priority-media { background-color: #fffbeb; color: #d97706; border: 1px solid #fed7aa;}
+        .priority-baja { background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb;}
+        .impact-alta { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca;}
+        .impact-media { background-color: #fffbeb; color: #f59e0b; border: 1px solid #fed7aa;}
+        .impact-baja { background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb;}
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }
+      body.shimeji-pinned iframe {
+        pointer-events: none;
+      }
+      body.shimeji-select-ie {
+        cursor: cell !important;
+      }
+      #shimeji-contextMenu::-webkit-scrollbar {
+        width: 6px;
+      }
+      #shimeji-contextMenu::-webkit-scrollbar-thumb {
+        background-color: rgba(30,30,30,0.6);
+        border-radius: 3px;
+      }
+      #shimeji-contextMenu::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    </style><meta name="shimejiBrowserExtensionId" content="gohjpllcolmccldfdggmamodembldgpc" data-version="2.0.5"></head>
+<body class="text-slate-700">
+
+    <div id="capture-area" class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <div>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Informe de Progreso</h1>
+                    <div id="health-indicator" class="mt-2 sm:mt-0"><span class="flex items-center gap-2 text-sm font-semibold px-3 py-1 rounded-full bg-green-100 text-green-800 border border-green-200"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"></path></svg><span>En Plazo</span></span></div> <!-- Health indicator placeholder -->
+                </div>
+                <p class="text-base sm:text-lg text-slate-500 mt-1">Project Example</p>
+                <div class="mt-4 text-sm text-slate-600 flex items-center gap-4 border-t border-slate-200 pt-3">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar-check" viewBox="0 0 16 16"><path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"></path><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"></path></svg>
+                        <span>Fecha Límite: <strong>31 de Julio, 2025</strong></span>
+                    </div>
+                    <div id="countdown" class="flex items-center gap-2 font-semibold">
+                    <span class="text-teal-700">5</span>
+                    <span class="text-slate-500 font-normal">días restantes</span>
+                </div>
+                </div>
+            </div>
+            <div class="w-full sm:w-auto flex items-stretch gap-3 mt-4 sm:mt-0">
+                <a href="#" target="_blank" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-slate-700 font-bold py-3 px-4 text-sm sm:text-base sm:px-5 rounded-lg hover:bg-slate-50 transition-colors shadow-sm border border-slate-200 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right flex-shrink-0" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"></path><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"></path></svg>
+                    <span>Ver Sitio Web</span>
+                </a>
+                <button id="export-pdf-btn" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-teal-600 text-white font-bold py-3 px-4 text-sm sm:text-base sm:px-5 rounded-lg hover:bg-teal-700 transition-colors shadow-sm text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download flex-shrink-0" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path></svg>
+                    <span>Exportar</span>
+                </button>
+            </div>
+        </header>
+
+        <nav class="mb-8 border-b border-slate-200 nav-container overflow-x-auto">
+            <ul id="main-nav" class="flex space-x-2 sm:space-x-4 text-sm font-medium text-center text-slate-500">
+                <li>
+                    <a data-view="resumen" class="nav-link inline-block pb-3 px-2 sm:px-3 cursor-pointer active">
+                        Resumen General
+                    </a>
+                </li>
+            <li><a data-view="module" data-index="0" class="nav-link inline-block pb-3 px-2 sm:px-3 cursor-pointer">Módulo de Análisis</a></li><li><a data-view="module" data-index="1" class="nav-link inline-block pb-3 px-2 sm:px-3 cursor-pointer">Módulo de Finanzas</a></li><li><a data-view="module" data-index="2" class="nav-link inline-block pb-3 px-2 sm:px-3 cursor-pointer">Módulo de Feedback</a></li><li><a data-view="module" data-index="3" class="nav-link inline-block pb-3 px-2 sm:px-3 cursor-pointer">Módulo General</a></li></ul>
+        </nav>
+
+        <main id="content-area">
+                    <div class="fade-in">
+                        <div class="card p-6 sm:p-8 mb-6">
+                            <h2 class="text-xl font-bold text-slate-800 mb-4">Progreso General del Proyecto</h2>
+                            
+                            <div class="w-full bg-slate-200 rounded-full h-3 relative my-4">
+                                <div class="bg-blue-400 h-3 rounded-full" style="width: 92.45283018867924%" title="Desarrollado"></div>
+                                <div class="bg-teal-500 h-3 rounded-full absolute top-0 left-0" style="width: 88.67924528301887%" title="Desplegado"></div>
+                            </div>
+                            <div class="flex justify-between text-sm font-medium text-slate-600 mb-6">
+                                <span><span class="font-bold text-blue-600">92%</span> Desarrollado</span>
+                                <span><span class="font-bold text-teal-600">89%</span> Desplegado</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                                <div class="bg-teal-50 border border-teal-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-teal-600">47</p>
+                                    <p class="text-xs sm:text-sm text-teal-800 font-medium">Implementadas</p>
+                                </div>
+                                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-blue-600">2</p>
+                                    <p class="text-xs sm:text-sm text-blue-800 font-medium">Pend. Despliegue</p>
+                                </div>
+                                <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-amber-600">4</p>
+                                    <p class="text-xs sm:text-sm text-amber-800 font-medium">Planificadas</p>
+                                </div>
+                                <div class="bg-slate-100 border border-slate-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-slate-600">53</p>
+                                    <p class="text-xs sm:text-sm text-slate-800 font-medium">Total</p>
+                                </div>
+                            </div>
+                            
+                            
+                    <div class="mt-8 pt-6 border-t border-slate-200">
+                        <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-coin text-amber-500" viewBox="0 0 16 16"><path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.091c-.432-.086-.666-.214-.666-.477 0-.247.242-.431.67-.431.434 0 .67.187.67.431h.611c-.076-.954-.83-1.697-2.182-1.785V5h-.6v.709c-1.4-.098-2.218-.846-2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.091c.432-.086.666-.214.666-.477 0-.247-.242-.431-.67-.431-.434 0-.67.187-.67.431H5.5z"></path><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path><path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"></path></svg>
+                           <span>Puntos de Desarrollo (v1.3)</span>
+                        </h3>
+                        <div class="w-full bg-slate-200 rounded-full h-3 relative my-2">
+                            <div class="bg-green-500 h-3 rounded-full" style="width: 92.45283018867924%" title="Utilizados"></div>
+                        </div>
+                        <div class="flex justify-between text-sm font-medium text-slate-600">
+                            <span>
+                                <span class="font-bold text-green-700">13.868 Puntos</span> Utilizados
+                            </span>
+                            <span>
+                                <span class="font-bold text-slate-800">15.000 Puntos</span> Total
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2 text-right">Puntos iniciales (v1.0): 4000 Puntos</p>
+                    </div>
+                
+
+                        </div>
+
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                            <div class="xl:col-span-2 card p-6 sm:p-8">
+                                <h2 class="text-xl font-bold text-slate-800 mb-2">Desglose por Módulo</h2>
+                                <p class="text-slate-500 mb-6">Selecciona un módulo para ver sus detalles.</p>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                                    <div>
+                                        <div style="position: relative; height: 300px; sm:height: 350px; max-width: 450px; margin: auto;">
+                                            <canvas id="moduleChart" width="458" height="389" style="display: block; box-sizing: border-box; height: 300px; width: 353px;"></canvas>
+                                        </div>
+                                        
+                    <div class="mt-4 lg:hidden">
+                        <ul class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
+                            
+                                <li class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-sm" style="background-color: #14b8a6"></span>
+                                    <span>Módulo de Análisis</span>
+                                </li>
+                            
+                                <li class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-sm" style="background-color: #f59e0b"></span>
+                                    <span>Módulo de Finanzas</span>
+                                </li>
+                            
+                                <li class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-sm" style="background-color: #38bdf8"></span>
+                                    <span>Módulo de Feedback</span>
+                                </li>
+                            
+                                <li class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-sm" style="background-color: #64748b"></span>
+                                    <span>Módulo General</span>
+                                </li>
+                            
+                        </ul>
+                    </div>
+                
+                                    </div>
+                                    <div>
+                                        <ul class="space-y-3" id="module-progress-list">
+                                            
+                        <li class="p-4 rounded-lg transition-colors hover:bg-slate-100 cursor-pointer border border-slate-200" data-view="module" data-index="0">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-slate-800">Módulo de Análisis</span>
+                                <span class="text-sm font-medium text-slate-600">18/19</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 relative">
+                                <div class="bg-blue-400 h-2 rounded-full" style="width: 94.73684210526315%;"></div>
+                                <div class="bg-teal-500 h-2 rounded-full absolute top-0 left-0" style="width: 89.47368421052632%;"></div>
+                            </div>
+                        </li>
+                    
+                        <li class="p-4 rounded-lg transition-colors hover:bg-slate-100 cursor-pointer border border-slate-200" data-view="module" data-index="1">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-slate-800">Módulo de Finanzas</span>
+                                <span class="text-sm font-medium text-slate-600">8/10</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 relative">
+                                <div class="bg-blue-400 h-2 rounded-full" style="width: 80%;"></div>
+                                <div class="bg-teal-500 h-2 rounded-full absolute top-0 left-0" style="width: 80%;"></div>
+                            </div>
+                        </li>
+                    
+                        <li class="p-4 rounded-lg transition-colors hover:bg-slate-100 cursor-pointer border border-slate-200" data-view="module" data-index="2">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-slate-800">Módulo de Feedback</span>
+                                <span class="text-sm font-medium text-slate-600">18/19</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 relative">
+                                <div class="bg-blue-400 h-2 rounded-full" style="width: 94.73684210526315%;"></div>
+                                <div class="bg-teal-500 h-2 rounded-full absolute top-0 left-0" style="width: 89.47368421052632%;"></div>
+                            </div>
+                        </li>
+                    
+                        <li class="p-4 rounded-lg transition-colors hover:bg-slate-100 cursor-pointer border border-slate-200" data-view="module" data-index="3">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-slate-800">Módulo General</span>
+                                <span class="text-sm font-medium text-slate-600">5/5</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 relative">
+                                <div class="bg-blue-400 h-2 rounded-full" style="width: 100%;"></div>
+                                <div class="bg-teal-500 h-2 rounded-full absolute top-0 left-0" style="width: 100%;"></div>
+                            </div>
+                        </li>
+                    
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="xl:col-span-1">
+                                
+                    <div class="card p-6 sm:p-8 h-full">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">Actividad Reciente</h2>
+                        <ul class="divide-y divide-slate-200">
+                        <li class="flex items-start gap-4 py-3">
+                            <div class="flex-shrink-0 w-12 text-right">
+                                <p class="text-sm font-bold text-teal-600">21</p>
+                                <p class="text-xs text-slate-500 capitalize">julio</p>
+                            </div>
+                            <div class="relative flex-1 pl-6">
+                                <div class="absolute w-px h-full bg-slate-200 left-0 top-2"></div>
+                                <div class="absolute w-3 h-3 bg-white border-2 border-teal-500 rounded-full -left-[5px] top-2"></div>
+                                <p class="text-sm text-slate-800">Creación de un tour animado como guía para el test.</p>
+                                <p class="text-xs text-slate-400 font-medium">Módulo de Feedback</p>
+                            </div>
+                        </li>
+                    
+                        <li class="flex items-start gap-4 py-3">
+                            <div class="flex-shrink-0 w-12 text-right">
+                                <p class="text-sm font-bold text-teal-600">20</p>
+                                <p class="text-xs text-slate-500 capitalize">julio</p>
+                            </div>
+                            <div class="relative flex-1 pl-6">
+                                <div class="absolute w-px h-full bg-slate-200 left-0 top-2"></div>
+                                <div class="absolute w-3 h-3 bg-white border-2 border-teal-500 rounded-full -left-[5px] top-2"></div>
+                                <p class="text-sm text-slate-800">Creación de un tour animado como guía para el uso de la herramienta.</p>
+                                <p class="text-xs text-slate-400 font-medium">Módulo de Finanzas</p>
+                            </div>
+                        </li>
+                    
+                        <li class="flex items-start gap-4 py-3">
+                            <div class="flex-shrink-0 w-12 text-right">
+                                <p class="text-sm font-bold text-teal-600">19</p>
+                                <p class="text-xs text-slate-500 capitalize">julio</p>
+                            </div>
+                            <div class="relative flex-1 pl-6">
+                                <div class="absolute w-px h-full bg-slate-200 left-0 top-2"></div>
+                                <div class="absolute w-3 h-3 bg-white border-2 border-teal-500 rounded-full -left-[5px] top-2"></div>
+                                <p class="text-sm text-slate-800">Creación de un tour animado como guía para utilizar los diagnósticos.</p>
+                                <p class="text-xs text-slate-400 font-medium">Módulo de Análisis</p>
+                            </div>
+                        </li>
+                    
+                        <li class="flex items-start gap-4 py-3">
+                            <div class="flex-shrink-0 w-12 text-right">
+                                <p class="text-sm font-bold text-teal-600">18</p>
+                                <p class="text-xs text-slate-500 capitalize">julio</p>
+                            </div>
+                            <div class="relative flex-1 pl-6">
+                                <div class="absolute w-px h-full bg-slate-200 left-0 top-2"></div>
+                                <div class="absolute w-3 h-3 bg-white border-2 border-teal-500 rounded-full -left-[5px] top-2"></div>
+                                <p class="text-sm text-slate-800">Diseño del historial de acciones realizadas por el usuario.</p>
+                                <p class="text-xs text-slate-400 font-medium">Módulo General</p>
+                            </div>
+                        </li>
+                    
+                        <li class="flex items-start gap-4 py-3">
+                            <div class="flex-shrink-0 w-12 text-right">
+                                <p class="text-sm font-bold text-teal-600">16</p>
+                                <p class="text-xs text-slate-500 capitalize">julio</p>
+                            </div>
+                            <div class="relative flex-1 pl-6">
+                                <div class="absolute w-px h-full bg-slate-200 left-0 top-2"></div>
+                                <div class="absolute w-3 h-3 bg-white border-2 border-teal-500 rounded-full -left-[5px] top-2"></div>
+                                <p class="text-sm text-slate-800">Inclusión del campo "Cargo" (Directivo, Mando intermedio, etc.) en el test.</p>
+                                <p class="text-xs text-slate-400 font-medium">Módulo de Feedback</p>
+                            </div>
+                        </li>
+                    </ul>
+                    </div>
+                
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            
+                    <div class="card p-6 sm:p-8 h-full">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shield-exclamation" viewBox="0 0 16 16"><path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.06.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.953-.325-1.905-.6-2.837-.855A1.72 1.72 0 0 0 8 1.5c-.533 0-1.042.152-1.462.433zM9 5a.905.905 0 0 1 .9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"></path></svg>
+                            Registro de Riesgos y Bloqueos
+                        </h3>
+                        <ul class="divide-y divide-slate-200">
+                        <li class="flex items-start gap-4 py-3 ">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-exclamation-circle-fill text-amber-500 flex-shrink-0" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path></svg>
+                            <div class="flex-1">
+                                <p class="text-sm text-slate-800">Pendiente de validación (UAT) del cliente sobre los módulos principales para detectar errores.</p>
+                                <div class="mt-1">
+                                    <span class="impact-badge impact-media">Media</span>
+                                </div>
+                            </div>
+                        </li>
+                    
+                        <li class="flex items-start gap-4 py-3 ">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-exclamation-circle-fill text-amber-500 flex-shrink-0" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path></svg>
+                            <div class="flex-1">
+                                <p class="text-sm text-slate-800">Se monitoriza una API externa por intermitencias ocasionales en el servicio.</p>
+                                <div class="mt-1">
+                                    <span class="impact-badge impact-baja">Baja</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    </div>
+                
+                            
+                    <div class="card p-6 sm:p-8 h-full">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bug-fill" viewBox="0 0 16 16"><path d="M4.978.855a.5.5 0 1 0-.956.29l.41 1.352A4.985 4.985 0 0 0 3 6h10a4.985 4.985 0 0 0-1.432-3.503l.41-1.352a.5.5 0 1 0-.956-.29l-.291.956A4.978 4.978 0 0 0 8 1a4.979 4.979 0 0 0-2.731.811l-.29-.956z"></path><path d="M13 6v1H8.5v8.975A5 5 0 0 0 13 11h.5a.5.5 0 0 1 .5.5v.5a.5.5 0 1 0 1 0v-.5a1.5 1.5 0 0 0-1.5-1.5H13V9h1.5a.5.5 0 0 0 0-1H13V7h.5A1.5 1.5 0 0 0 15 5.5V5a.5.5 0 0 0-1 0v.5a.5.5 0 0 1-.5.5H13zm-5.5 9.975V7H3V6h-.5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 0-1 0v.5A1.5 1.5 0 0 0 2.5 7H3v1H1.5a.5.5 0 0 0 0 1H3v3h-.5A1.5 1.5 0 0 0 1 12.5v.5a.5.5 0 1 0 1 0v-.5a.5.5 0 0 1 .5-.5H3a5 5 0 0 0 4.5 4.975z"></path></svg>
+                             Métricas de Calidad
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+                            <div class="bg-red-50 border border-red-200 p-3 rounded-lg">
+                                <p class="text-2xl font-bold text-red-600">0</p>
+                                <p class="text-xs font-medium text-red-800">Bugs Críticos</p>
+                            </div>
+                            <div class="bg-slate-100 border border-slate-200 p-3 rounded-lg">
+                                <p class="text-2xl font-bold text-slate-600">5</p>
+                                <p class="text-xs font-medium text-slate-800">Bugs Totales</p>
+                            </div>
+                            <div class="bg-teal-50 border border-teal-200 p-3 rounded-lg col-span-2 sm:col-span-1">
+                                <p class="text-2xl font-bold text-teal-600">87%</p>
+                                <p class="text-xs font-medium text-teal-800">Cobertura Tests</p>
+                            </div>
+                        </div>
+                    </div>
+                
+                        </div>
+
+                        <div class="mt-6">
+                            
+                    <div class="card p-6 sm:p-8 bg-teal-50 border border-teal-200">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="flex-shrink-0 text-teal-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" class="bi bi-brain" viewBox="0 0 16 16"><path d="M4.545 1.707a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1-.707.707L5 2.414l-.293.293a.5.5 0 0 1-.707-.707l.545-.545ZM2.75 4.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm9.5 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5ZM4.5 7.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm7.5 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm-4-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Z"></path><path d="M11.5 2.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5Zm-7 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5ZM8 0a4.5 4.5 0 0 1 4.5 4.5v.535a.5.5 0 0 1-.28.465l-1.42 1.105a.5.5 0 0 1-.54.033L8.5 6.24a.5.5 0 0 0-.5 0l-1.76 1.375a.5.5 0 0 1-.54-.033L4.28 5.5a.5.5 0 0 1-.28-.465V4.5A4.5 4.5 0 0 1 8 0Zm0 11.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5Zm-5.5-1.465A.5.5 0 0 1 2.28 9.5l1.42-1.105a.5.5 0 0 1 .54.033L6.5 9.804a.5.5 0 0 0 .5 0l2.26-1.765a.5.5 0 0 1 .54-.033l1.42 1.105a.5.5 0 0 1 .28.465v.535A4.5 4.5 0 0 1 8 16a4.5 4.5 0 0 1-4.5-4.5v-.535Z"></path></svg>
+                            </div>
+                            <div class="flex-1 text-center md:text-left">
+                                <h3 class="text-xl font-bold text-slate-800">Evolución del Ecosistema: Próximos Pasos</h3>
+                                <p class="text-slate-600 mt-2">Descubre cómo el próximo módulo de <strong>Funcionalidad Avanzada con IA</strong> puede revolucionar la gestión proactiva y la asignación de recursos.</p>
+                            </div>
+                            <div class="flex-shrink-0 w-full md:w-auto">
+                                <a href="#" target="_blank" rel="noopener noreferrer" class="inline-block w-full text-center bg-teal-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">
+                                    Ver Funcionalidad Futura
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                        </div>
+
+                    </div>
+                </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
+            
+            // Data for the project
+            const projectData = {
+                startDate: '2025-01-01',
+                endDate: '2025-07-31',
+                budget: {
+                    total: 15000,
+                    initial: 4000,
+                    currencySymbol: 'Puntos'
+                },
+                modules: [
+                    { 
+                        name: 'Módulo de Análisis', 
+                        implemented: [
+                            { text: 'Funcionalidad para crear y gestionar análisis.', completedDate: '2025-06-10' },
+                            { text: 'Generación de reportes dinámicos.', completedDate: '2025-06-20' },
+                            'Exportación de datos a CSV y Excel.',
+                            'Integración con API de terceros para data externa.',
+                            { text: 'Envío de notificaciones por correo electrónico.', completedDate: '2025-07-02' },
+                            'Dashboard de visualización de métricas clave.',
+                            'Sistema de versionado para los análisis.',
+                            'Personalización de plantillas de reporte.',
+                            { text: 'Capacidad para sugerir acciones basadas en datos.', completedDate: '2025-07-12' },
+                            'Asistente de configuración inicial del módulo.',
+                            'Opción de crear análisis colaborativos.',
+                            'Herramienta para agendar análisis recurrentes.',
+                            'Listado de análisis completados y pendientes.',
+                            'Gestión de permisos a nivel de análisis.',
+                            'Modificación del contenido de las notificaciones.',
+                            'Ajustes en la interfaz de usuario del dashboard.',
+                            { text: 'Creación de un tour guiado para nuevos usuarios.', completedDate: '2025-07-20' }
+                        ],
+                        pending_deployment: ['Implementación de nuevo diseño en la interfaz.'],
+                        planned: [{ text: 'Mejora de rendimiento en reportes complejos.', priority: 'Baja' }] 
+                    },
+                    { 
+                        name: 'Módulo de Finanzas', 
+                        implemented: [
+                            'Cálculo de estimaciones de costos.',
+                            'Envío de presupuestos a clientes.',
+                            'Historial de presupuestos generados.',
+                            'Funcionalidad para duplicar un presupuesto existente.',
+                            'Edición de campos con recálculo automático.',
+                            'Opción para agregar servicios manualmente.',
+                            'Capacidad para aplicar descuentos y promociones.', 
+                            { text: 'Creación de un tour guiado para la herramienta.', completedDate: '2025-07-21' }
+                        ],
+                        pending_deployment: [],
+                        planned: [{ text: 'Nuevo diseño para la propuesta de presupuesto.', priority: 'Alta' }, { text: 'Implementación del nuevo diseño de la propuesta.', priority: 'Media' }] 
+                    },
+                    { 
+                        name: 'Módulo de Feedback', 
+                        implemented: [
+                            'Creación de perfiles de equipo.',
+                            'Creación de perfiles de usuario.',
+                            'Organización de usuarios en departamentos.',
+                            'Generación de un informe de feedback general.',
+                            'Historial de informes generados por equipo.',
+                            'Alertas de validación para la correcta recolección de datos.',
+                            'Carga masiva de usuarios desde un archivo CSV.',
+                            'Validación para evitar la duplicación de feedback.',
+                            'Funcionalidad para reiniciar ciclos de feedback.',
+                            'Envío de los resultados por correo electrónico.',
+                            'Listado de usuarios, departamentos y equipos.',
+                            'Visualización del progreso de la recolección de feedback.',
+                            'Búsqueda de usuarios por nombre o correo.',
+                            'Capacidad para archivar equipos y usuarios.',
+                            { text: 'Modificación del importador CSV para mayor flexibilidad.', completedDate: '2025-07-16' },
+                            { text: 'Inclusión de campos personalizados en el feedback.', completedDate: '2025-07-17' },
+                            { text: 'Creación de un tour guiado para el módulo.', completedDate: '2025-07-22' }
+                        ],
+                        pending_deployment: ['Generación de 3 informes especializados.'],
+                        planned: [{ text: 'Análisis de posibles mejoras futuras para el módulo.', priority: 'Baja' }] 
+                    },
+                    { 
+                        name: 'Módulo General', 
+                        implemented: [
+                            { text: 'Autenticación de usuarios (OAuth 2.0).', completedDate: '2025-06-01' },
+                            { text: 'Gestión de perfiles de usuario.', completedDate: '2025-06-05' },
+                            'Integración de todos los módulos en un dashboard central.',
+                            'Integración de un sistema de almacenamiento de archivos.',
+                            { text: 'Diseño del historial de acciones del usuario.', completedDate: '2025-07-19' }
+                        ],
+                        pending_deployment: [],
+                        planned: [] 
+                    }
+                ],
+                projectHealth: {
+                    risksAndBlockers: [
+                        { id: 4, description: 'Pendiente de validación (UAT) del cliente sobre los módulos principales para detectar errores.', impact: 'Media', status: 'Abierto' },
+                        { id: 2, description: 'Se monitoriza una API externa por intermitencias ocasionales en el servicio.', impact: 'Baja', status: 'Abierto' }
+                    ],
+                    qualityMetrics: {
+                        criticalBugs: 0,
+                        totalBugs: 5,
+                        testCoverage: 87
+                    }
+                }
+            };
+
+            // DOM Elements
+            const navContainer = document.getElementById('main-nav');
+            const contentArea = document.getElementById('content-area');
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            let moduleChart = null;
+            const chartColors = ['#14b8a6', '#f59e0b', '#38bdf8', '#64748b'];
+
+            // Initialize the application
+            function init() {
+                projectData.modules.forEach((module, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.dataset.view = 'module';
+                    a.dataset.index = index;
+                    a.textContent = module.name;
+                    a.className = 'nav-link inline-block pb-3 px-2 sm:px-3 cursor-pointer';
+                    li.appendChild(a);
+                    // navContainer.appendChild(li); // Avoid duplicating nav links
+                });
+
+                navContainer.addEventListener('click', handleNavClick);
+                exportPdfBtn.addEventListener('click', handleExportPdf);
+                
+                renderProjectHealth();
+                displayCountdown();
+                renderView('resumen');
+            }
+
+            function displayCountdown() {
+                const countdownEl = document.getElementById('countdown');
+                if (!countdownEl) return;
+
+                const endDate = new Date(projectData.endDate);
+                const today = new Date('2025-07-23T15:05:00'); 
+
+                endDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+
+                if (today > endDate) {
+                    countdownEl.innerHTML = `<span class="text-red-600">Plazo finalizado</span>`;
+                    return;
+                }
+                
+                const diffTime = endDate.getTime() - today.getTime();
+                const daysRemaining = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                
+                countdownEl.innerHTML = `
+                    <span class="text-teal-700">${daysRemaining-2}</span>
+                    <span class="text-slate-500 font-normal">días restantes</span>
+                `;
+            }
+            
+            function renderProjectHealth() {
+                const healthEl = document.getElementById('health-indicator');
+                if (!healthEl) return;
+
+                const startDate = new Date(projectData.startDate);
+                const endDate = new Date(projectData.endDate);
+                const today = new Date('2025-07-23T15:05:00');
+
+                const totalDuration = endDate - startDate;
+                const elapsedDuration = today - startDate;
+                const timeElapsedPercentage = Math.max(0, Math.min(100, (elapsedDuration / totalDuration) * 100));
+
+                const totalImplemented = projectData.modules.reduce((sum, m) => sum + m.implemented.length, 0);
+                const totalPending = projectData.modules.reduce((sum, m) => sum + (m.pending_deployment?.length || 0), 0);
+                const totalPlanned = projectData.modules.reduce((sum, m) => sum + m.planned.length, 0);
+                const grandTotal = totalImplemented + totalPending + totalPlanned;
+                const developedPercentage = grandTotal > 0 ? ((totalImplemented + totalPending) / grandTotal) * 100 : 0;
+
+                const diff = developedPercentage - timeElapsedPercentage;
+                let status = {};
+
+                if (projectData.projectHealth.qualityMetrics.criticalBugs > 0 || projectData.projectHealth.risksAndBlockers.some(r => r.impact === 'Alta' && r.status === 'Abierto')) {
+                     status = { text: 'En Riesgo', color: 'amber', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" /></svg>` };
+                } else if (diff >= -10) { 
+                    status = { text: 'En Plazo', color: 'green', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" /></svg>` };
+                } else { 
+                    status = { text: 'Retrasado', color: 'red', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z" /></svg>` };
+                }
+
+                healthEl.innerHTML = `<span class="flex items-center gap-2 text-sm font-semibold px-3 py-1 rounded-full bg-${status.color}-100 text-${status.color}-800 border border-${status.color}-200">${status.icon}<span>${status.text}</span></span>`;
+            }
+
+            function formatPoints(value) {
+                const numberFormatter = new Intl.NumberFormat('es-ES', {
+                    maximumFractionDigits: 0
+                });
+                return `${numberFormatter.format(value)} ${projectData.budget.currencySymbol}`;
+            }
+
+            function handleNavClick(e) {
+                if (e.target.tagName === 'A') {
+                    const view = e.target.dataset.view;
+                    const index = e.target.dataset.index;
+                    renderView(view, index);
+                }
+            }
+            
+            function generateListHtmlForPdf(items) {
+                 if (!items || items.length === 0) return `<li>No hay características.</li>`;
+                return items.map(item => {
+                    const text = typeof item === 'string' ? item : (item.text || item);
+                    const priority = typeof item === 'object' && item.priority ? ` <span style="font-weight: 600; font-size: 0.875rem;">(${item.priority})</span>` : '';
+                    return `<li style="padding-bottom: 0.25rem;">${text}${priority}</li>`;
+                }).join('');
+            }
+
+            function handleExportPdf() {
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.position = 'absolute';
+                pdfContainer.style.left = '-9999px';
+                pdfContainer.style.width = '1000px'; 
+                pdfContainer.style.padding = '40px';
+                pdfContainer.style.backgroundColor = '#ffffff';
+                pdfContainer.style.fontFamily = "'Inter', sans-serif";
+                pdfContainer.className = 'text-slate-700';
+                
+                let reportHtml = `...`; // PDF generation logic would also need updates to include new sections, omitted here for brevity.
+                
+                // For a full implementation, the PDF generation would also need to render the new risk and quality sections.
+                alert('La generación de PDF se ha simplificado en este ejemplo. En una implementación real, esta función también exportaría las nuevas secciones de Riesgos y Calidad.');
+            }
+
+            function renderView(view, index = null) {
+                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                if (view === 'resumen') {
+                    document.querySelector('[data-view="resumen"]').classList.add('active');
+                    renderSummaryView();
+                } else if (view === 'module' && index !== null) {
+                    document.querySelector('[data-view="resumen"]').classList.remove('active');
+                    const activeLink = document.querySelector(`[data-index="${index}"]`);
+                    if(activeLink) activeLink.classList.add('active');
+                    renderModuleDetailView(parseInt(index));
+                }
+            }
+            
+            function renderActivityLog() {
+                const allImplemented = projectData.modules.flatMap(module =>
+                    module.implemented
+                        .map(item => (typeof item === 'object' ? { ...item, moduleName: module.name, text: item.text || item } : null))
+                        .filter(item => item && item.completedDate)
+                );
+
+                allImplemented.sort((a, b) => new Date(b.completedDate) - new Date(a.completedDate));
+                const recentActivities = allImplemented.slice(0, 5);
+                if (recentActivities.length === 0) return '';
+                const activityHtml = recentActivities.map(activity => {
+                    const date = new Date(activity.completedDate);
+                    const formattedDate = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+                    const day = formattedDate.split(' ')[0];
+                    const month = formattedDate.split(' de ')[1];
+                    
+                    return `
+                        <li class="flex items-start gap-4 py-3">
+                            <div class="flex-shrink-0 w-12 text-right">
+                                <p class="text-sm font-bold text-teal-600">${day}</p>
+                                <p class="text-xs text-slate-500 capitalize">${month}</p>
+                            </div>
+                            <div class="relative flex-1 pl-6">
+                                <div class="absolute w-px h-full bg-slate-200 left-0 top-2"></div>
+                                <div class="absolute w-3 h-3 bg-white border-2 border-teal-500 rounded-full -left-[5px] top-2"></div>
+                                <p class="text-sm text-slate-800">${activity.text}</p>
+                                <p class="text-xs text-slate-400 font-medium">${activity.moduleName}</p>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="card p-6 sm:p-8 h-full">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">Actividad Reciente</h2>
+                        <ul class="divide-y divide-slate-200">${activityHtml}</ul>
+                    </div>
+                `;
+            }
+            
+            function renderRiskLog() {
+                const risks = projectData.projectHealth.risksAndBlockers;
+                if (!risks || risks.length === 0) {
+                     return `
+                        <div class="card p-6 sm:p-8 h-full">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shield-exclamation" viewBox="0 0 16 16"><path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.06.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.953-.325-1.905-.6-2.837-.855A1.72 1.72 0 0 0 8 1.5c-.533 0-1.042.152-1.462.433zM9 5a.905.905 0 0 1 .9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" /></svg>
+                                Registro de Riesgos y Bloqueos
+                            </h3>
+                            <p class="text-slate-500 italic">No hay riesgos activos identificados.</p>
+                        </div>
+                    `;
+                }
+                const riskHtml = risks.map(risk => {
+                    const statusIcon = risk.status === 'Resuelto' 
+                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-circle-fill text-green-500 flex-shrink-0" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" /></svg>`
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-exclamation-circle-fill text-amber-500 flex-shrink-0" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" /></svg>`;
+
+                    return `
+                        <li class="flex items-start gap-4 py-3 ${risk.status === 'Resuelto' ? 'opacity-60' : ''}">
+                           ${statusIcon}
+                            <div class="flex-1">
+                                <p class="text-sm text-slate-800">${risk.description}</p>
+                                <div class="mt-1">
+                                    <span class="impact-badge impact-${risk.impact.toLowerCase()}">${risk.impact}</span>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="card p-6 sm:p-8 h-full">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shield-exclamation" viewBox="0 0 16 16"><path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.06.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.953-.325-1.905-.6-2.837-.855A1.72 1.72 0 0 0 8 1.5c-.533 0-1.042.152-1.462.433zM9 5a.905.905 0 0 1 .9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" /></svg>
+                            Registro de Riesgos y Bloqueos
+                        </h3>
+                        <ul class="divide-y divide-slate-200">${riskHtml}</ul>
+                    </div>
+                `;
+            }
+
+            function renderQualityWidget() {
+                const metrics = projectData.projectHealth.qualityMetrics;
+                return `
+                    <div class="card p-6 sm:p-8 h-full">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bug-fill" viewBox="0 0 16 16"><path d="M4.978.855a.5.5 0 1 0-.956.29l.41 1.352A4.985 4.985 0 0 0 3 6h10a4.985 4.985 0 0 0-1.432-3.503l.41-1.352a.5.5 0 1 0-.956-.29l-.291.956A4.978 4.978 0 0 0 8 1a4.979 4.979 0 0 0-2.731.811l-.29-.956z" /><path d="M13 6v1H8.5v8.975A5 5 0 0 0 13 11h.5a.5.5 0 0 1 .5.5v.5a.5.5 0 1 0 1 0v-.5a1.5 1.5 0 0 0-1.5-1.5H13V9h1.5a.5.5 0 0 0 0-1H13V7h.5A1.5 1.5 0 0 0 15 5.5V5a.5.5 0 0 0-1 0v.5a.5.5 0 0 1-.5.5H13zm-5.5 9.975V7H3V6h-.5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 0-1 0v.5A1.5 1.5 0 0 0 2.5 7H3v1H1.5a.5.5 0 0 0 0 1H3v3h-.5A1.5 1.5 0 0 0 1 12.5v.5a.5.5 0 1 0 1 0v-.5a.5.5 0 0 1 .5-.5H3a5 5 0 0 0 4.5 4.975z" /></svg>
+                             Métricas de Calidad
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+                            <div class="bg-red-50 border border-red-200 p-3 rounded-lg">
+                                <p class="text-2xl font-bold text-red-600">${metrics.criticalBugs}</p>
+                                <p class="text-xs font-medium text-red-800">Bugs Críticos</p>
+                            </div>
+                            <div class="bg-slate-100 border border-slate-200 p-3 rounded-lg">
+                                <p class="text-2xl font-bold text-slate-600">${metrics.totalBugs}</p>
+                                <p class="text-xs font-medium text-slate-800">Bugs Totales</p>
+                            </div>
+                            <div class="bg-teal-50 border border-teal-200 p-3 rounded-lg col-span-2 sm:col-span-1">
+                                <p class="text-2xl font-bold text-teal-600">${metrics.testCoverage}%</p>
+                                <p class="text-xs font-medium text-teal-800">Cobertura Tests</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Render the main summary view
+            function renderSummaryView() {
+                const totalImplemented = projectData.modules.reduce((sum, m) => sum + m.implemented.length, 0);
+                const totalPending = projectData.modules.reduce((sum, m) => sum + (m.pending_deployment?.length || 0), 0);
+                const totalPlanned = projectData.modules.reduce((sum, m) => sum + m.planned.length, 0);
+                const grandTotal = totalImplemented + totalPending + totalPlanned;
+                
+                const deployedPercentage = grandTotal > 0 ? (totalImplemented / grandTotal) * 100 : 0;
+                const developedPercentage = grandTotal > 0 ? ((totalImplemented + totalPending) / grandTotal) * 100 : 0;
+                
+                const spentAmount = projectData.budget.total * (developedPercentage / 100);
+                const budgetSpentPercentage = developedPercentage;
+                
+                const budgetHtml = `
+                    <div class="mt-8 pt-6 border-t border-slate-200">
+                        <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-coin text-amber-500" viewBox="0 0 16 16"><path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.091c-.432-.086-.666-.214-.666-.477 0-.247.242-.431.67-.431.434 0 .67.187.67.431h.611c-.076-.954-.83-1.697-2.182-1.785V5h-.6v.709c-1.4-.098-2.218-.846-2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.091c.432-.086.666-.214.666-.477 0-.247-.242-.431-.67-.431-.434 0-.67.187-.67.431H5.5z" /><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" /><path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" /></svg>
+                           <span>Puntos de Desarrollo (v1.3)</span>
+                        </h3>
+                        <div class="w-full bg-slate-200 rounded-full h-3 relative my-2">
+                            <div class="bg-green-500 h-3 rounded-full" style="width: ${budgetSpentPercentage}%" title="Utilizados"></div>
+                        </div>
+                        <div class="flex justify-between text-sm font-medium text-slate-600">
+                            <span>
+                                <span class="font-bold text-green-700">${formatPoints(spentAmount)}</span> Utilizados
+                            </span>
+                            <span>
+                                <span class="font-bold text-slate-800">${formatPoints(projectData.budget.total)}</span> Total
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2 text-right">Puntos iniciales (v1.0): ${formatPoints(projectData.budget.initial)}</p>
+                    </div>
+                `;
+
+                const modulesProgressHtml = projectData.modules.map((module, index) => {
+                    const moduleImplemented = module.implemented.length;
+                    const modulePending = module.pending_deployment?.length || 0;
+                    const modulePlanned = module.planned.length;
+                    const moduleTotal = moduleImplemented + modulePending + modulePlanned;
+                    
+                    const moduleDeployedPerc = moduleTotal > 0 ? (moduleImplemented / moduleTotal) * 100 : 0;
+                    const moduleDevelopedPerc = moduleTotal > 0 ? ((moduleImplemented + modulePending) / moduleTotal) * 100 : 0;
+
+                    return `
+                        <li class="p-4 rounded-lg transition-colors hover:bg-slate-100 cursor-pointer border border-slate-200" data-view="module" data-index="${index}">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-semibold text-slate-800">${module.name}</span>
+                                <span class="text-sm font-medium text-slate-600">${moduleImplemented + modulePending}/${moduleTotal}</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 relative">
+                                <div class="bg-blue-400 h-2 rounded-full" style="width: ${moduleDevelopedPerc}%"></div>
+                                <div class="bg-teal-500 h-2 rounded-full absolute top-0 left-0" style="width: ${moduleDeployedPerc}%"></div>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+
+                const customLegendHtml = `
+                    <div class="mt-4 lg:hidden">
+                        <ul class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
+                            ${projectData.modules.map((m, i) => `
+                                <li class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-sm" style="background-color: ${chartColors[i]}"></span>
+                                    <span>${m.name}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                const riskLogHtml = renderRiskLog();
+                const qualityWidgetHtml = renderQualityWidget();
+                const nextStepCardHtml = `
+                    <div class="card p-6 sm:p-8 bg-teal-50 border border-teal-200">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <div class="flex-shrink-0 text-teal-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" class="bi bi-brain" viewBox="0 0 16 16"><path d="M4.545 1.707a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1-.707.707L5 2.414l-.293.293a.5.5 0 0 1-.707-.707l.545-.545ZM2.75 4.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm9.5 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5ZM4.5 7.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm7.5 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm-4-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5Z" /><path d="M11.5 2.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5Zm-7 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5ZM8 0a4.5 4.5 0 0 1 4.5 4.5v.535a.5.5 0 0 1-.28.465l-1.42 1.105a.5.5 0 0 1-.54.033L8.5 6.24a.5.5 0 0 0-.5 0l-1.76 1.375a.5.5 0 0 1-.54-.033L4.28 5.5a.5.5 0 0 1-.28-.465V4.5A4.5 4.5 0 0 1 8 0Zm0 11.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5Zm-5.5-1.465A.5.5 0 0 1 2.28 9.5l1.42-1.105a.5.5 0 0 1 .54.033L6.5 9.804a.5.5 0 0 0 .5 0l2.26-1.765a.5.5 0 0 1 .54-.033l1.42 1.105a.5.5 0 0 1 .28.465v.535A4.5 4.5 0 0 1 8 16a4.5 4.5 0 0 1-4.5-4.5v-.535Z" /></svg>
+                            </div>
+                            <div class="flex-1 text-center md:text-left">
+                                <h3 class="text-xl font-bold text-slate-800">Evolución del Ecosistema: Próximos Pasos</h3>
+                                <p class="text-slate-600 mt-2">Descubre cómo el próximo módulo de <strong>Funcionalidad Avanzada con IA</strong> puede revolucionar la gestión proactiva y la asignación de recursos.</p>
+                            </div>
+                            <div class="flex-shrink-0 w-full md:w-auto">
+                                <a href="#" target="_blank" rel="noopener noreferrer" class="inline-block w-full text-center bg-teal-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">
+                                    Ver Funcionalidad Futura
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                contentArea.innerHTML = `
+                    <div class="fade-in">
+                        <div class="card p-6 sm:p-8 mb-6">
+                            <h2 class="text-xl font-bold text-slate-800 mb-4">Progreso General del Proyecto</h2>
+                            
+                            <div class="w-full bg-slate-200 rounded-full h-3 relative my-4">
+                                <div class="bg-blue-400 h-3 rounded-full" style="width: ${developedPercentage}%" title="Desarrollado"></div>
+                                <div class="bg-teal-500 h-3 rounded-full absolute top-0 left-0" style="width: ${deployedPercentage}%" title="Desplegado"></div>
+                            </div>
+                            <div class="flex justify-between text-sm font-medium text-slate-600 mb-6">
+                                <span><span class="font-bold text-blue-600">${Math.round(developedPercentage)}%</span> Desarrollado</span>
+                                <span><span class="font-bold text-teal-600">${Math.round(deployedPercentage)}%</span> Desplegado</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                                <div class="bg-teal-50 border border-teal-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-teal-600">${totalImplemented}</p>
+                                    <p class="text-xs sm:text-sm text-teal-800 font-medium">Implementadas</p>
+                                </div>
+                                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-blue-600">${totalPending}</p>
+                                    <p class="text-xs sm:text-sm text-blue-800 font-medium">Pend. Despliegue</p>
+                                </div>
+                                <div class="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-amber-600">${totalPlanned}</p>
+                                    <p class="text-xs sm:text-sm text-amber-800 font-medium">Planificadas</p>
+                                </div>
+                                <div class="bg-slate-100 border border-slate-200 p-4 rounded-lg">
+                                    <p class="text-2xl sm:text-3xl font-bold text-slate-600">${grandTotal}</p>
+                                    <p class="text-xs sm:text-sm text-slate-800 font-medium">Total</p>
+                                </div>
+                            </div>
+                            
+                            ${budgetHtml}
+
+                        </div>
+
+                        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                            <div class="xl:col-span-2 card p-6 sm:p-8">
+                                <h2 class="text-xl font-bold text-slate-800 mb-2">Desglose por Módulo</h2>
+                                <p class="text-slate-500 mb-6">Selecciona un módulo para ver sus detalles.</p>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                                    <div>
+                                        <div style="position: relative; height: 300px; sm:height: 350px; max-width: 450px; margin: auto;">
+                                            <canvas id="moduleChart"></canvas>
+                                        </div>
+                                        ${customLegendHtml}
+                                    </div>
+                                    <div>
+                                        <ul class="space-y-3" id="module-progress-list">
+                                            ${modulesProgressHtml}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="xl:col-span-1">
+                                ${renderActivityLog()}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            ${riskLogHtml}
+                            ${qualityWidgetHtml}
+                        </div>
+
+                        <div class="mt-6">
+                            ${nextStepCardHtml}
+                        </div>
+
+                    </div>
+                `;
+                renderChart();
+
+                document.getElementById('module-progress-list').addEventListener('click', (e) => {
+                    const targetLi = e.target.closest('li');
+                    if (targetLi && targetLi.dataset.view === 'module') {
+                        renderView('module', targetLi.dataset.index);
+                    }
+                });
+            }
+
+            function renderModuleDetailView(index) {
+                const module = projectData.modules[index];
+                const implementedCount = module.implemented.length;
+                const pendingCount = module.pending_deployment?.length || 0;
+                const plannedCount = module.planned.length;
+                const totalFeatures = implementedCount + pendingCount + plannedCount;
+
+                // CORRECTED LOGIC
+                const developedPerc = totalFeatures > 0 ? ((implementedCount + pendingCount) / totalFeatures) * 100 : 0;
+                const deployedPerc = totalFeatures > 0 ? (implementedCount / totalFeatures) * 100 : 0;
+
+                contentArea.innerHTML = `
+                    <div class="card p-6 sm:p-8 fade-in">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">${module.name}</h2>
+                                <p class="text-slate-500 mt-1">${implementedCount + pendingCount} de ${totalFeatures} funcionalidades desarrolladas.</p>
+                            </div>
+                            <div class="mt-4 md:mt-0 w-full md:w-1/3">
+                                <div class="w-full bg-slate-200 rounded-full h-2.5 relative">
+                                    <div class="bg-blue-400 h-2.5 rounded-full" style="width: ${developedPerc}%" title="Desarrollado"></div>
+                                    <div class="bg-teal-500 h-2.5 rounded-full absolute top-0 left-0" style="width: ${deployedPerc}%" title="Desplegado"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mt-1">
+                                     <span><span class="font-bold text-blue-600">${Math.round(developedPerc)}%</span> Dev</span>
+                                     <span><span class="font-bold text-teal-600">${Math.round(deployedPerc)}%</span> Live</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="my-6">
+                            <input type="text" id="feature-search" placeholder="Buscar en ${module.name}..." class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-8">
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                                    <span class="text-teal-500"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" /></svg></span>
+                                    Implementadas (${implementedCount})
+                                </h3>
+                                <ul class="space-y-3" id="implemented-list">${generateListHtml(module.implemented, 'implemented')}</ul>
+                            </div>
+                             <div>
+                                <h3 class="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                                    <span class="text-blue-500"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.864.046a.5.5 0 0 0-.728 0l-6 5a.5.5 0 0 0 .364.864h1.5v6.5a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-6.5h1.5a.5.5 0 0 0 .364-.864l-6-5zM6.5 14.5V9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5-.5h-2a.5.5 0 0 1-.5-.5z" /></svg></span>
+                                    Pend. Despliegue (${pendingCount})
+                                </h3>
+                                <ul class="space-y-3" id="pending-list">${generateListHtml(module.pending_deployment, 'pending_deployment')}</ul>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                                    <span class="text-amber-500"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.5 5.5a.5.5 0 0 0-1 0v3.354l-1.429 2.38a.5.5 0 1 0 .858.514l1.1-1.832A.5.5 0 0 0 8.5 9.5V5.5z" /><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" /></svg></span>
+                                    Planificadas (${plannedCount})
+                                </h3>
+                                <ul class="space-y-3" id="planned-list">${generateListHtml(module.planned, 'planned')}</ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('feature-search').addEventListener('keyup', handleSearch);
+            }
+            
+            function generateListHtml(items, type) {
+                if (!items || items.length === 0) {
+                    return `<li class="text-slate-500 italic px-4 py-2 bg-slate-50 rounded-md">No hay características en esta sección.</li>`;
+                }
+                return items.map(item => {
+                    const text = typeof item === 'string' ? item : (item.text || item);
+                    const priority = typeof item === 'object' && item.priority ? `<span class="priority-badge priority-${item.priority.toLowerCase()}">${item.priority}</span>` : '';
+                    return `<li class="feature-item p-3 bg-slate-50 rounded-md border border-slate-200 text-sm flex justify-between items-center"><span>${text}</span>${priority}</li>`;
+                }).join('');
+            }
+
+            function handleSearch(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.feature-item').forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+                });
+            }
+
+            function renderChart() {
+                const ctx = document.getElementById('moduleChart');
+                if (!ctx) return;
+                if (moduleChart) moduleChart.destroy();
+
+                const data = {
+                    labels: projectData.modules.map(m => m.name),
+                    datasets: [{
+                        data: projectData.modules.map(m => (m.implemented.length + (m.pending_deployment?.length || 0) + m.planned.length)),
+                        backgroundColor: chartColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                };
+
+                Chart.register(ChartDataLabels);
+
+                moduleChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                renderView('module', elements[0].index);
+                            }
+                        },
+                        plugins: { legend: { display: false }, datalabels: { display: false } }
+                    }
+                });
+            }
+
+            // Start the application
+            init();
+        });
+    </script>
+
+<div id="shimeji-workArea" style="position: fixed; background: transparent; z-index: 2147483643; width: 100vw; height: 100vh; left: 0px; top: 0px; transform: translate(0px, 0px); pointer-events: none;"></div></body></html>
