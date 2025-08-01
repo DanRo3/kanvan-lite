@@ -1,0 +1,98 @@
+// This schema defines the database structure for Kanban Lite.
+// It includes models for users, authentication (compatible with Next-Auth),
+// projects, and tasks.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+// ----------------------------------------
+//  APPLICATION MODELS
+// ----------------------------------------
+
+enum UserRole {
+  OWNER
+  DEVELOPER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  image         String?
+  role          UserRole  @default(DEVELOPER)
+  projects      Project[] // Projects created by this user (if they are an OWNER)
+  developingProjects Project[] @relation("ProjectDevelopers")
+  tasks         Task[]
+}
+
+enum ProjectStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  publicId      String        @unique @default(cuid()) // Secure, non-sequential ID for the public client link
+  name          String
+  description   String?       @db.Text
+  status        ProjectStatus @default(PLANNED)
+  pointsBudget  Int           // Total estimated effort for the project
+  pointsUsed    Int           @default(0) // Accumulated points from completed/deployed tasks
+  deadline      DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  ownerId       String?
+  owner         User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tasks         Task[]
+
+  developers  User[]    @relation("ProjectDevelopers")
+  criticalBugs  Int
+  normalBugs    Int
+  lowBugs       Int
+  testsCoberage Float
+  risks         Risk[]
+}
+
+enum TaskStatus {
+  PENDING      // Task is in the backlog
+  IN_PROGRESS  // Task is being actively worked on
+  COMPLETED    // Development is finished, pending review/deployment
+  DEPLOYED     // Task is live and points are counted towards progress
+}
+
+model Task {
+  id               String     @id @default(cuid())
+  title            String
+  status           TaskStatus @default(PENDING)
+  points           Int        // Effort points this task consumes from the project budget
+  developmentHours Int?       // Optional: estimated or logged hours for the task
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  projectId        String
+  project          Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  developers       User[]
+}
+
+enum RiskScope {
+  LOW      
+  NORMAL  
+  CRITICAL   
+}
+
+model Risk{
+   id               String     @id @default(cuid())
+   projectId        String
+   project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+   name             String
+   scope            RiskScope
+}
