@@ -6,15 +6,16 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateProjectDto } from './dto/create-project.dto';
 import { type User, UserRole } from '@prisma/client';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createProjectDto: CreateProjectDto, user: User) {
-    if (user.role !== UserRole.OWNER) {
-      throw new ForbiddenException('Only owners can create projects');
-    }
+    // if (user.role !== UserRole.OWNER) {
+    //   throw new ForbiddenException('Only owners can create projects');
+    // }
 
     return this.prisma.project.create({
       data: {
@@ -171,5 +172,57 @@ export class ProjectsService {
     }
 
     return false;
+  }
+
+  async update(
+    projectId: string,
+    updateProjectDto: UpdateProjectDto,
+    user: User,
+  ) {
+    // Verificar que el proyecto existe
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    // Validar permisos del usuario: solo Owner puede actualizar su proyecto
+    if (user.role !== UserRole.OWNER || project.ownerId !== user.id) {
+      throw new ForbiddenException(
+        'You do not have permission to update this project',
+      );
+    }
+
+    // Actualiza el proyecto, si viene deadline lo convierte a Date
+    const dataToUpdate = {
+      ...updateProjectDto,
+      ...(updateProjectDto.deadline
+        ? { deadline: new Date(updateProjectDto.deadline) }
+        : {}),
+    };
+
+    return this.prisma.project.update({
+      where: { id: projectId },
+      data: dataToUpdate,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        developers: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        tasks: true,
+        risks: true,
+      },
+    });
   }
 }

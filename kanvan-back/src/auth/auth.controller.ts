@@ -9,15 +9,22 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req, @Res() res: Response) {
-    // Initiates Google OAuth flow
-    res.redirect('https://accounts.google.com/o/oauth2/auth');
+  async googleAuth(@Req() req, @Res() res: Response) {}
+
+  @Get('google1')
+  async google1() {
+    return {
+      hello: 'world',
+    };
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res: Response) {
-    const loginResult = await this.authService.login(req.user);
+    const loginResult = await this.authService.loginWithOAuth(
+      req.user,
+      'google',
+    );
 
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -28,15 +35,15 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  async githubAuth(@Req() req, @Res() res: Response) {
-    // Initiates GitHub OAuth flow
-    res.redirect('https://github.com/login/oauth/authorize');
-  }
+  async githubAuth(@Req() req, @Res() res: Response) {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   async githubAuthCallback(@Req() req, @Res() res: Response) {
-    const loginResult = await this.authService.login(req.user);
+    const loginResult = await this.authService.loginWithOAuth(
+      req.user,
+      'github',
+    );
 
     // Redirect to frontend with token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

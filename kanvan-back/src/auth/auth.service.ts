@@ -65,6 +65,30 @@ export class AuthService {
     };
   }
 
+  async loginWithOAuth(profile: any, provider: string) {
+    // Obtiene o crea el usuario usando el perfil OAuth
+    const user = await this.validateOAuthUser(profile, provider);
+
+    // Prepara el payload asegurando incluir nombre como claim
+    const payload = {
+      sub: user.id,
+      name: user.name, // incluye nombre
+      role: user.role,
+    };
+
+    // Genera y retorna el JWT junto con los datos del usuario
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        role: user.role,
+      },
+    };
+  }
+
   async validateUser(userId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id: userId },

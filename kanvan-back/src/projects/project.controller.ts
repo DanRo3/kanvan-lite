@@ -1,11 +1,21 @@
-import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Patch,
+  Body,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ProjectsService } from './project.service';
-import type { CreateProjectDto } from './dto/create-project.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { type User, UserRole } from '@prisma/client';
+import { UpdateProjectDto } from './dto/update-project.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('api/projects')
 export class ProjectsController {
@@ -14,7 +24,12 @@ export class ProjectsController {
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.OWNER)
-  create(createProjectDto: CreateProjectDto, @CurrentUser() user: User) {
+  @ApiBody({ type: CreateProjectDto })
+  create(
+    //createProjectDto: CreateProjectDto,
+    @CurrentUser() user: User,
+    @Body() createProjectDto: CreateProjectDto,
+  ) {
     return this.projectsService.create(createProjectDto, user);
   }
 
@@ -28,5 +43,16 @@ export class ProjectsController {
   @Get('public/:publicId')
   findByPublicId(@Param('publicId') publicId: string) {
     return this.projectsService.findByPublicId(publicId);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.OWNER)
+  update(
+    @Param('id') id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.update(id, updateProjectDto, user);
   }
 }
