@@ -7,11 +7,17 @@ import QualityCard from "@/components/project-component/QualityCard";
 import TasksProjectComponent from "@/components/project-component/TasksProjectComponent";
 import ProjectAvatars from "@/components/project-component/ProjectAvatars";
 import EditDetailTaskModal from "@/components/modals/EditDetailsTask";
+import AddDevModal from "@/components/modals/AddDevModal"; // Importa tu modal nuevo
 
 interface Developer {
   id: string;
   email: string;
   photoUrl?: string | null;
+}
+
+interface User {
+  id: string;
+  email: string;
 }
 
 interface Task {
@@ -28,7 +34,7 @@ export default function Page() {
   const params = useParams();
   const { id } = params;
 
-  // Estados para el proyecto editable
+  // Estados para el proyecto editable (igual que tienes)
   const [projectName, setProjectName] = useState("Proyecto " + (id ?? ""));
   const [dueDate, setDueDate] = useState("2025-09-01");
   const [pointsDone, setPointsDone] = useState(12);
@@ -63,10 +69,8 @@ export default function Page() {
     },
   ]);
 
-  // Estado del proyecto
   const [status, setStatus] = useState<"green" | "yellow" | "red">("green");
 
-  // Simulación de tareas con puntos y horas agregados
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: "t1",
@@ -115,7 +119,79 @@ export default function Page() {
     },
   ]);
 
-  // Calcula días restantes
+  // Estado para el modal EditDetailTaskModal (igual que antes)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Nuevo estado para el modal AddDevModal
+  const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
+
+  // Ejemplo simple lista de usuarios del sistema para el modal AddDevModal
+  // En producción, deberías traerlos desde tu API o estado global
+  const allUsers: User[] = [
+    { id: "100", email: "marta@example.com" },
+    { id: "101", email: "carlos@example.com" },
+    { id: "102", email: "sofia@example.com" },
+    { id: "103", email: "pedro@example.com" },
+  ];
+
+  // Abre modal detalle tarea
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  // Cierra modal detalle tarea
+  const closeModal = () => {
+    setSelectedTask(null);
+  };
+
+  // Guardar cambios modal tarea
+  const saveTaskChanges = () => {
+    alert("Guardar cambios para tarea: " + (selectedTask?.name ?? ""));
+    closeModal();
+  };
+
+  // Agregar/quitar developers delegado modal tarea
+  const addDeveloperToSelectedTask = () => {
+    if (!selectedTask) return;
+    const newDev: Developer = {
+      id: (selectedTask.developers.length + 100).toString(),
+      email: `nuevo${selectedTask.developers.length + 100}@example.com`,
+      photoUrl: null,
+    };
+    setSelectedTask({
+      ...selectedTask,
+      developers: [...selectedTask.developers, newDev],
+    });
+  };
+  const removeDeveloperFromSelectedTask = () => {
+    if (!selectedTask) return;
+    setSelectedTask({
+      ...selectedTask,
+      developers: selectedTask.developers.slice(
+        0,
+        Math.max(selectedTask.developers.length - 1, 0)
+      ),
+    });
+  };
+
+  // Handler para abrir el AddDevModal desde el botón '+'
+  const openAddDevModal = () => setIsAddDevModalOpen(true);
+  const closeAddDevModal = () => setIsAddDevModalOpen(false);
+
+  // Handler para agregar usuario seleccionado desde AddDevModal a desarrolladores de proyecto
+  const handleAddUserToProject = (user: User) => {
+    // Evitar duplicados
+    if (developers.find((d) => d.id === user.id)) {
+      alert("El desarrollador ya está agregado al proyecto.");
+      return;
+    }
+    setDevelopers((prev) => [
+      ...prev,
+      { id: user.id, email: user.email, photoUrl: null },
+    ]);
+  };
+
+  // Calc días restantes (igual que antes)
   const calcDaysRemaining = () => {
     const now = new Date();
     const due = new Date(dueDate);
@@ -124,7 +200,6 @@ export default function Page() {
     return diffDays >= 0 ? diffDays : 0;
   };
   const [daysRemaining, setDaysRemaining] = useState(calcDaysRemaining());
-
   useEffect(() => {
     const interval = setInterval(() => {
       setDaysRemaining(calcDaysRemaining());
@@ -139,7 +214,7 @@ export default function Page() {
     red: "#f87171",
   };
 
-  // Handlers ficticios agregar/quitar devs
+  // Handlers agregar/quitar devs para ProjectAvatars
   const addDeveloper = () => {
     const newId = (developers.length + 1).toString();
     setDevelopers((prev) => [
@@ -151,60 +226,15 @@ export default function Page() {
     setDevelopers((prev) => prev.slice(0, Math.max(prev.length - 1, 0)));
   };
 
-  // Estado modal y tarea seleccionada
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // Abrir modal con tarea seleccionada
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-  };
-
-  // Cerrar modal
-  const closeModal = () => {
-    setSelectedTask(null);
-  };
-
-  // Guardar cambios (puedes implementar aquí la lógica real)
-  const saveTaskChanges = () => {
-    alert("Guardar cambios para tarea: " + (selectedTask?.name ?? ""));
-    closeModal();
-  };
-
-  // Agregar desarrollador a tarea seleccionada dentro del modal
-  const addDeveloperToSelectedTask = () => {
-    if (!selectedTask) return;
-    const newDev: Developer = {
-      id: (selectedTask.developers.length + 100).toString(),
-      email: `nuevo${selectedTask.developers.length + 100}@example.com`,
-      photoUrl: null,
-    };
-    setSelectedTask({
-      ...selectedTask,
-      developers: [...selectedTask.developers, newDev],
-    });
-  };
-
-  // Quitar desarrollador de tarea seleccionada dentro del modal
-  const removeDeveloperFromSelectedTask = () => {
-    if (!selectedTask) return;
-    setSelectedTask({
-      ...selectedTask,
-      developers: selectedTask.developers.slice(
-        0,
-        Math.max(selectedTask.developers.length - 1, 0)
-      ),
-    });
-  };
-
   return (
     <>
-      {/* Contenido difuminado y oscurecido al abrir modal */}
+      {/* Contenido difuminado y oscurecido al abrir modal detalle tarea */}
       <main
         className={`
           p-10 min-h-screen relative font-sans
           bg-[#121212] text-[#e0e0e0]
           ${
-            selectedTask
+            selectedTask || isAddDevModalOpen
               ? "filter blur-sm brightness-90 pointer-events-none select-none"
               : ""
           }
@@ -213,7 +243,7 @@ export default function Page() {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         }}
       >
-        {/* Estado del proyecto */}
+        {/* Estado proyecto */}
         <div
           title={`Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`}
           className="absolute top-5 right-5 min-w-[100px] h-12 px-3 rounded-lg shadow-md flex items-center justify-center font-bold text-sm text-[#121212]"
@@ -289,19 +319,20 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Text debajo puntos */}
+          {/* Texto debajo de puntos */}
           <div className="mt-1.5 text-cyan-300 font-semibold text-sm text-center w-[372px] ml-12">
             Faltan {pointsTotal - pointsDone} puntos para completar el proyecto
           </div>
         </div>
 
-        {/* Desarrolladores */}
+        {/* Desarrolladores (pasamos onAdd prop para abrir modal) */}
         <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
           Desarrolladores
         </div>
         <ProjectAvatars
           developers={developers}
-          onAdd={addDeveloper}
+          showButtons={true}
+          onAdd={openAddDevModal} // Aquí va la función que abre el modal AddDevModal
           onRemove={removeDeveloper}
         />
 
@@ -329,19 +360,20 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Panel de tareas con callback para abrir modal */}
+        {/* Panel tareas */}
         <TasksProjectComponent tasks={tasks} onTaskClick={handleTaskClick} />
 
-        {/* Panel registros de riesgos */}
+        {/* Panel riesgos */}
         <RiskCard
           risks={risks}
+          showAddButton={true}
           onAddRisk={() =>
             alert("Redirigiendo a pantalla para añadir riesgos...")
           }
         />
 
-        {/* Panel métricas de calidad */}
-        <QualityCard />
+        {/* Panel métricas calidad */}
+        <QualityCard editable={true} />
 
         {/* Botones guardar y salir */}
         <div className="flex gap-3 mt-6 justify-end">
@@ -362,7 +394,7 @@ export default function Page() {
         </div>
       </main>
 
-      {/* Modal del detalle de tarea */}
+      {/* Modal detalle tarea */}
       {selectedTask && (
         <EditDetailTaskModal
           taskName={selectedTask.name}
@@ -374,6 +406,15 @@ export default function Page() {
           onRemoveDeveloper={removeDeveloperFromSelectedTask}
           onSave={saveTaskChanges}
           onClose={closeModal}
+        />
+      )}
+
+      {/* Modal agregar devs */}
+      {isAddDevModalOpen && (
+        <AddDevModal
+          users={allUsers}
+          onAddUser={handleAddUserToProject}
+          onClose={closeAddDevModal}
         />
       )}
     </>

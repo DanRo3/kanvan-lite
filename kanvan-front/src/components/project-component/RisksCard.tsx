@@ -7,10 +7,15 @@ export interface Risk {
 
 interface RiskCardProps {
   risks: Risk[];
-  onAddRisk: () => void;
+  onAddRisk?: () => void;
+  showAddButton?: boolean; // Nueva prop opcional
 }
 
-const RiskCard: React.FC<RiskCardProps> = ({ risks, onAddRisk }) => {
+const RiskCard: React.FC<RiskCardProps> = ({
+  risks,
+  onAddRisk,
+  showAddButton = true, // Por defecto muestra el botón
+}) => {
   const colorMap: Record<string, string> = {
     bajo: "bg-green-400",
     medio: "bg-yellow-400",
@@ -27,33 +32,31 @@ const RiskCard: React.FC<RiskCardProps> = ({ risks, onAddRisk }) => {
         relative
       "
     >
-      <h2
-        className="
-          m-0 mb-6 text-[#c2c2c2] font-bold text-xl
-        "
-      >
+      <h2 className="m-0 mb-6 text-[#c2c2c2] font-bold text-xl">
         Registro de Riesgos y Bloqueos
       </h2>
 
-      {/* Botón + en esquina superior derecha */}
-      <button
-        type="button"
-        aria-label="Agregar riesgo"
-        onClick={onAddRisk}
-        className="
-          absolute top-6 right-6
-          rounded-md border border-white/30
-          bg-white/10 text-gray-200 font-semibold
-          cursor-pointer px-3.5 py-1.5
-          text-[1.25rem] leading-none
-          select-none
-          transition-colors duration-300 ease-in-out
-          z-10
-          hover:bg-white/20
-        "
-      >
-        +
-      </button>
+      {/* Botón + en esquina superior derecha, renderizado solo si showAddButton es true */}
+      {showAddButton && (
+        <button
+          type="button"
+          aria-label="Agregar riesgo"
+          onClick={onAddRisk}
+          className="
+            absolute top-6 right-6
+            rounded-md border border-white/30
+            bg-white/10 text-gray-200 font-semibold
+            cursor-pointer px-3.5 py-1.5
+            text-[1.25rem] leading-none
+            select-none
+            transition-colors duration-300 ease-in-out
+            z-10
+            hover:bg-white/20
+          "
+        >
+          +
+        </button>
+      )}
 
       {/* Lista de riesgos */}
       <div className="mt-3 max-h-52 overflow-y-auto flex flex-col gap-3 pr-3">

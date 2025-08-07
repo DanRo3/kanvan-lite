@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 interface Developer {
   id: string;
@@ -17,8 +17,14 @@ interface EditDetailTaskModalProps {
   developmentHours: number;
   onAddDeveloper: () => void;
   onRemoveDeveloper: () => void;
-  onSave: () => void;
+  onSave: (updated: {
+    taskName: string;
+    points: number;
+    developmentHours: number;
+    status: Status;
+  }) => void;
   onClose: () => void;
+  editable?: boolean; // Opcional para controlar edición general
 }
 
 const statusColors: Record<Status, string> = {
@@ -28,16 +34,41 @@ const statusColors: Record<Status, string> = {
 };
 
 const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
-  taskName,
-  status,
+  taskName: initialTaskName,
+  status: initialStatus,
   developers,
-  points,
-  developmentHours,
+  points: initialPoints,
+  developmentHours: initialDevelopmentHours,
   onAddDeveloper,
   onRemoveDeveloper,
   onSave,
   onClose,
+  editable = true,
 }) => {
+  const [taskName, setTaskName] = useState(initialTaskName);
+  const [points, setPoints] = useState(initialPoints);
+  const [developmentHours, setDevelopmentHours] = useState(
+    initialDevelopmentHours
+  );
+  const [editableStatus, setEditableStatus] = useState<Status>(initialStatus);
+
+  useEffect(() => {
+    setTaskName(initialTaskName);
+  }, [initialTaskName]);
+  useEffect(() => {
+    setPoints(initialPoints);
+  }, [initialPoints]);
+  useEffect(() => {
+    setDevelopmentHours(initialDevelopmentHours);
+  }, [initialDevelopmentHours]);
+  useEffect(() => {
+    setEditableStatus(initialStatus);
+  }, [initialStatus]);
+
+  const handleSave = () => {
+    onSave({ taskName, points, developmentHours, status: editableStatus });
+  };
+
   return (
     <>
       {/* Modal Container */}
@@ -58,28 +89,56 @@ const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
           aria-modal="true"
           aria-labelledby="modal-title"
         >
-          {/* Estado (superior derecha) */}
-          <div
-            className={`
-              ${statusColors[status]}
-              absolute top-6 right-6
-              inline-block rounded-lg px-4 py-1 font-semibold shadow-md select-none
-              w-max
-            `}
-            aria-label={`Estado: ${
-              status.charAt(0).toUpperCase() + status.slice(1)
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+          {/* Contenedor superior con estado y nombre separados */}
+          <div className="flex justify-between items-start">
+            {/* Estado editable con select */}
+            {editable ? (
+              <select
+                aria-label="Estado de la tarea"
+                value={editableStatus}
+                onChange={(e) => setEditableStatus(e.target.value as Status)}
+                className={`
+                  rounded-lg px-4 py-1 font-semibold shadow-md select-none w-max self-start
+                  outline-none cursor-pointer
+                  ${statusColors[editableStatus]}
+                `}
+                disabled={!editable}
+              >
+                <option value="green">Green</option>
+                <option value="yellow">Yellow</option>
+                <option value="red">Red</option>
+              </select>
+            ) : (
+              <div
+                className={`
+                ${statusColors[initialStatus]}
+                inline-block rounded-lg px-4 py-1 font-semibold shadow-md select-none w-max self-start
+              `}
+                aria-label={`Estado: ${
+                  initialStatus.charAt(0).toUpperCase() + initialStatus.slice(1)
+                }`}
+              >
+                {initialStatus.charAt(0).toUpperCase() + initialStatus.slice(1)}
+              </div>
+            )}
           </div>
 
-          {/* Título alineado a izquierda */}
-          <h2
+          {/* Nombre editable, debajo del estado con margen separador */}
+          <input
             id="modal-title"
-            className="text-3xl font-extrabold mb-4 select-none text-left"
-          >
-            {taskName}
-          </h2>
+            type="text"
+            value={taskName}
+            onChange={editable ? (e) => setTaskName(e.target.value) : undefined}
+            readOnly={!editable}
+            className={`
+              text-3xl font-extrabold mt-4 mb-6 bg-transparent border-b border-gray-600
+              focus:outline-none ${editable ? "focus:border-green-400" : ""}
+              text-[#e0e0e0]
+              select-text w-full
+              ${!editable ? "cursor-not-allowed" : ""}
+            `}
+            aria-label="Nombre editable de la tarea"
+          />
 
           {/* --- Desarrolladores primero --- */}
           <section className="mb-6">
@@ -88,24 +147,24 @@ const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
             </h3>
 
             <div className="flex items-center gap-2 overflow-x-auto">
-              {/* Botón eliminar */}
-              <button
-                type="button"
-                onClick={onRemoveDeveloper}
-                aria-label="Eliminar desarrolladores"
-                className="
-                  bg-transparent border border-green-400 text-green-400
-                  font-bold text-xl rounded-lg w-9 h-9
-                  cursor-pointer flex items-center justify-center
-                  select-none transition-colors duration-300 ease-in-out
-                  hover:bg-green-300/30
-                  flex-shrink-0
-                "
-              >
-                &minus;
-              </button>
+              {editable && (
+                <button
+                  type="button"
+                  onClick={onRemoveDeveloper}
+                  aria-label="Eliminar desarrolladores"
+                  className="
+                    bg-transparent border border-green-400 text-green-400
+                    font-bold text-xl rounded-lg w-9 h-9
+                    cursor-pointer flex items-center justify-center
+                    select-none transition-colors duration-300 ease-in-out
+                    hover:bg-green-300/30
+                    flex-shrink-0
+                  "
+                >
+                  &minus;
+                </button>
+              )}
 
-              {/* Avatares */}
               {developers.map((dev, idx) => (
                 <div
                   key={dev.id}
@@ -136,54 +195,107 @@ const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
                 </div>
               ))}
 
-              {/* Botón añadir */}
-              <button
-                type="button"
-                onClick={onAddDeveloper}
-                aria-label="Agregar desarrolladores"
-                className="
-                  bg-transparent border border-green-400 text-green-400
-                  font-bold text-xl rounded-lg w-9 h-9
-                  cursor-pointer flex items-center justify-center
-                  select-none transition-colors duration-300 ease-in-out
-                  hover:bg-green-300/30
-                  flex-shrink-0
-                "
-              >
-                +
-              </button>
+              {editable && (
+                <button
+                  type="button"
+                  onClick={onAddDeveloper}
+                  aria-label="Agregar desarrolladores"
+                  className="
+                    bg-transparent border border-green-400 text-green-400
+                    font-bold text-xl rounded-lg w-9 h-9
+                    cursor-pointer flex items-center justify-center
+                    select-none transition-colors duration-300 ease-in-out
+                    hover:bg-green-300/30
+                    flex-shrink-0
+                  "
+                >
+                  +
+                </button>
+              )}
             </div>
           </section>
 
-          {/* Puntos y Horas de desarrollo centrados vertical y horizontal */}
+          {/* Puntos y Horas de desarrollo editables y centrados */}
           <section className="flex flex-grow items-center justify-center gap-12 select-none">
-            <div className="flex flex-col items-center">
-              <label className="text-sm text-gray-400 mb-1">Puntos</label>
-              <div className="text-lg font-semibold">{points}</div>
+            <div className="flex flex-col items-center w-24">
+              <label
+                htmlFor="points-input"
+                className="text-sm text-gray-400 mb-1"
+              >
+                Puntos
+              </label>
+              <input
+                id="points-input"
+                type="number"
+                min={0}
+                value={points}
+                onChange={
+                  editable
+                    ? (e) => {
+                        const val = parseInt(e.target.value);
+                        setPoints(isNaN(val) ? 0 : val);
+                      }
+                    : undefined
+                }
+                readOnly={!editable}
+                className={`
+                  text-lg font-semibold text-center bg-transparent border border-gray-600 
+                  rounded-md text-[#e0e0e0] px-2 py-1 w-full
+                  focus:outline-none focus:border-green-400
+                  ${editable ? "" : "cursor-not-allowed"}
+                `}
+                aria-label="Puntos editables"
+              />
             </div>
 
-            <div className="flex flex-col items-center">
-              <label className="text-sm text-gray-400 mb-1">
+            <div className="flex flex-col items-center w-40">
+              <label
+                htmlFor="hours-input"
+                className="text-sm text-gray-400 mb-1"
+              >
                 Horas de desarrollo
               </label>
-              <div className="text-lg font-semibold">{developmentHours}</div>
+              <input
+                id="hours-input"
+                type="number"
+                min={0}
+                value={developmentHours}
+                onChange={
+                  editable
+                    ? (e) => {
+                        const val = parseInt(e.target.value);
+                        setDevelopmentHours(isNaN(val) ? 0 : val);
+                      }
+                    : undefined
+                }
+                readOnly={!editable}
+                className={`
+                  text-lg font-semibold text-center bg-transparent border border-gray-600 
+                  rounded-md text-[#e0e0e0] px-2 py-1 w-full
+                  focus:outline-none focus:border-green-400
+                  ${editable ? "" : "cursor-not-allowed"}
+                `}
+                aria-label="Horas de desarrollo editables"
+              />
             </div>
           </section>
 
-          {/* Botones guardar y salir, debajo */}
+          {/* Botones guardar y salir */}
           <div className="mt-6 flex justify-end gap-4">
-            <button
-              onClick={onSave}
-              type="button"
-              className="
-                px-6 py-2 rounded-md border border-white/30 bg-white/10
-                text-[#e0e0e0] font-semibold cursor-pointer
-                transition-colors duration-300 ease-in-out
-                hover:bg-white/20
-              "
-            >
-              Guardar
-            </button>
+            {editable && (
+              <button
+                onClick={handleSave}
+                type="button"
+                className="
+                  px-6 py-2 rounded-md border border-white/30 bg-white/10
+                  text-[#e0e0e0] font-semibold cursor-pointer
+                  transition-colors duration-300 ease-in-out
+                  hover:bg-white/20
+                "
+              >
+                Guardar
+              </button>
+            )}
 
             <button
               onClick={onClose}
@@ -204,7 +316,6 @@ const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
   );
 };
 
-// Helper to generate pastel background color for avatar initials
 function getRandomColor(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {

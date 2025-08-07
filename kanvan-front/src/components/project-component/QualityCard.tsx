@@ -1,8 +1,10 @@
 import React from "react";
 
-interface QualityCardProps {}
+interface QualityCardProps {
+  editable?: boolean; // Por defecto true para mantener comportamiento actual
+}
 
-const QualityCard: React.FC<QualityCardProps> = () => {
+const QualityCard: React.FC<QualityCardProps> = ({ editable = true }) => {
   const metrics = [
     "Bugs Bajos",
     "Bugs Normales",
@@ -23,19 +25,11 @@ const QualityCard: React.FC<QualityCardProps> = () => {
         shadow-[0_4px_30px_rgba(0,0,0,0.1)]
       "
     >
-      <h2
-        className="
-          mt-0 mb-6 text-[#c2c2c2] font-bold text-xl
-        "
-      >
+      <h2 className="mt-0 mb-6 text-[#c2c2c2] font-bold text-xl">
         Métricas de Calidad
       </h2>
 
-      <div
-        className="
-          flex flex-wrap justify-between gap-6
-        "
-      >
+      <div className="flex flex-wrap justify-between gap-6">
         {metrics.map((title) => (
           <div
             key={title}
@@ -60,16 +54,23 @@ const QualityCard: React.FC<QualityCardProps> = () => {
               min={0}
               step={1}
               defaultValue={0}
-              aria-label={`${title} editable`}
-              onClick={(e) => e.currentTarget.select()}
-              className="
+              aria-label={`${title} ${editable ? "editable" : "no editable"}`}
+              onClick={(e) => {
+                if (editable) e.currentTarget.select();
+              }}
+              readOnly={!editable}
+              className={`
                 w-20
                 text-2xl font-extrabold text-green-400
                 text-center
                 bg-transparent border-none outline-none
-                select-text cursor-text
                 appearance-none
-              "
+                ${
+                  editable
+                    ? "cursor-text"
+                    : "cursor-not-allowed text-green-700/60"
+                }
+              `}
             />
           </div>
         ))}

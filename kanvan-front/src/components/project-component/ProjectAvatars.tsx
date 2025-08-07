@@ -7,9 +7,10 @@ interface Developer {
 }
 
 interface ProjectAvatarsProps {
+  showButtons?: boolean;
   developers: Developer[];
-  onAdd: () => void;
-  onRemove: () => void;
+  onAdd?: () => void;
+  onRemove?: () => void;
 }
 
 const getRandomColor = (seed: string) => {
@@ -25,24 +26,27 @@ const ProjectAvatars: React.FC<ProjectAvatarsProps> = ({
   developers,
   onAdd,
   onRemove,
+  showButtons = true,
 }) => {
   return (
     <div className="flex items-center mt-2">
       {/* Botón eliminar dev (−) */}
-      <button
-        onClick={onRemove}
-        aria-label="Eliminar desarrolladores"
-        className="
-          bg-transparent border border-green-400 text-green-400
-          font-bold text-2xl rounded-lg w-9 h-9
-          cursor-pointer mr-2 flex items-center justify-center
-          select-none transition-colors duration-300 ease-in-out
-          hover:bg-green-300/30
-        "
-        type="button"
-      >
-        −
-      </button>
+      {showButtons && (
+        <button
+          onClick={onRemove}
+          aria-label="Eliminar desarrolladores"
+          className="
+            bg-transparent border border-green-400 text-green-400
+            font-bold text-2xl rounded-lg w-9 h-9
+            cursor-pointer mr-2 flex items-center justify-center
+            select-none transition-colors duration-300 ease-in-out
+            hover:bg-green-300/30
+          "
+          type="button"
+        >
+          −
+        </button>
+      )}
 
       {/* Avatares */}
       <div
@@ -89,20 +93,22 @@ const ProjectAvatars: React.FC<ProjectAvatarsProps> = ({
       </div>
 
       {/* Botón añadir dev (+) */}
-      <button
-        onClick={onAdd}
-        aria-label="Agregar desarrolladores"
-        className="
-          bg-transparent border border-green-400 text-green-400
-          font-bold text-2xl rounded-lg w-9 h-9
-          cursor-pointer ml-2 flex items-center justify-center
-          select-none transition-colors duration-300 ease-in-out
-          hover:bg-green-300/30
-        "
-        type="button"
-      >
-        +
-      </button>
+      {showButtons && (
+        <button
+          onClick={onAdd}
+          aria-label="Agregar desarrolladores"
+          className="
+            bg-transparent border border-green-400 text-green-400
+            font-bold text-2xl rounded-lg w-9 h-9
+            cursor-pointer ml-2 flex items-center justify-center
+            select-none transition-colors duration-300 ease-in-out
+            hover:bg-green-300/30
+          "
+          type="button"
+        >
+          +
+        </button>
+      )}
     </div>
   );
 };
