@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ProjectCard from "@/components/project-component/project-card";
+import ProjectCard from "@/components/project-component/ProjectCard";
 
 export default function Page() {
   const baseProject = {
