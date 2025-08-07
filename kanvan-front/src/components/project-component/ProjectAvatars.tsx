@@ -1,6 +1,6 @@
 import React from "react";
 
-interface Developer {
+export interface Developer {
   id: string;
   email: string;
   photoUrl?: string | null;

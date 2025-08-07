@@ -1,6 +1,7 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import ProjectCard from "@/components/project-component/ProjectCard";
+import AddProjectModal from "@/components/modals/AddProjectModal";
 
 export default function Page() {
   const baseProject = {
@@ -17,6 +18,36 @@ export default function Page() {
     name: `${baseProject.name} #${i + 1}`,
     href: `/owner/project-details/`,
   }));
+
+  const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+
+  const openAddProjectModal = () => setIsAddProjectModalOpen(true);
+  const closeAddProjectModal = () => setIsAddProjectModalOpen(false);
+
+  const exampleDevelopers = [
+    { id: "1", email: "ana@example.com", photoUrl: null },
+    { id: "2", email: "jose@example.com", photoUrl: null },
+    { id: "3", email: "luisa@example.com", photoUrl: null },
+  ];
+
+  const handleCreateProject = (newProjectData: {
+    name: string;
+    description: string;
+    points: number;
+    dueDate: string;
+    developers: typeof exampleDevelopers;
+  }) => {
+    // Aquí crea un proyecto nuevo con ID único y cualquier estado o href que necesites
+    const newProject = {
+      ...newProjectData,
+      status: "green" as const,
+      pointsDone: 0,
+      pointsTotal: newProjectData.points,
+      href: "/owner/project-details/new", // o como prefieras
+    };
+    setProjects((prev) => [...prev, newProject]);
+    closeAddProjectModal();
+  };
 
   return (
     <main
@@ -42,9 +73,7 @@ export default function Page() {
           select-none
           hover:bg-white/20 hover:shadow-[0_10px_40px_rgba(31,38,135,0.6)] hover:text-[#fafafa]
         "
-        onClick={() => {
-          alert("Aquí iría la navegación para crear un nuevo proyecto");
-        }}
+        onClick={openAddProjectModal}
       >
         + Nuevo Proyecto
       </button>
@@ -62,6 +91,14 @@ export default function Page() {
           <ProjectCard key={idx} {...proj} />
         ))}
       </section>
+
+      {isAddProjectModalOpen && (
+        <AddProjectModal
+          developers={exampleDevelopers} // Pasa los desarrolladores disponibles
+          onCreate={handleCreateProject} // Handler guardar proyecto
+          onClose={closeAddProjectModal} // Handler cerrar modal
+        />
+      )}
     </main>
   );
 }

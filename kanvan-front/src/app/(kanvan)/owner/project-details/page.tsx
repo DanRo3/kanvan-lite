@@ -7,7 +7,9 @@ import QualityCard from "@/components/project-component/QualityCard";
 import TasksProjectComponent from "@/components/project-component/TasksProjectComponent";
 import ProjectAvatars from "@/components/project-component/ProjectAvatars";
 import EditDetailTaskModal from "@/components/modals/EditDetailsTask";
-import AddDevModal from "@/components/modals/AddDevModal"; // Importa tu modal nuevo
+import AddDevModal from "@/components/modals/AddDevModal";
+import AddRiskModal from "@/components/modals/AddRiskModal";
+import AddTaskModal from "@/components/modals/AddTaskModal";
 
 interface Developer {
   id: string;
@@ -34,7 +36,6 @@ export default function Page() {
   const params = useParams();
   const { id } = params;
 
-  // Estados para el proyecto editable (igual que tienes)
   const [projectName, setProjectName] = useState("Proyecto " + (id ?? ""));
   const [dueDate, setDueDate] = useState("2025-09-01");
   const [pointsDone, setPointsDone] = useState(12);
@@ -54,22 +55,54 @@ export default function Page() {
     { id: "3", email: "luisa@example.com", photoUrl: null },
   ]);
 
-  const [risks, setRisks] = useState<Risk[]>([
-    {
-      descripcion: "Retraso en proveedores",
-      impacto: "alto",
-    },
-    {
-      descripcion: "Falta de recursos humanos",
-      impacto: "medio",
-    },
-    {
-      descripcion: "Pruebas insuficientes",
-      impacto: "bajo",
-    },
+  const [risks] = useState<Risk[]>([
+    { descripcion: "Retraso en proveedores", impacto: "alto" },
+    { descripcion: "Falta de recursos humanos", impacto: "medio" },
+    { descripcion: "Pruebas insuficientes", impacto: "bajo" },
   ]);
 
+  // Estado para controlar apertura modal
+  const [isAddRiskModalOpen, setIsAddRiskModalOpen] = useState(false);
+
+  // Simula alcances desde BD o tu API
+  const alcancesDesdeBD = ["Alcance 1", "Alcance 2", "Alcance 3"];
+
+  // Abrir modal
+  const openAddRiskModal = () => setIsAddRiskModalOpen(true);
+  // Cerrar modal
+  const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
+
+  const handleAddRisk = (descripcion: string, alcance: string) => {
+    // Puedes asignar impacto según alcance, aquí un ejemplo simple:
+    let impacto: "bajo" | "medio" | "alto" = "bajo";
+    if (alcance.toLowerCase().includes("alto")) impacto = "alto";
+    else if (alcance.toLowerCase().includes("medio")) impacto = "medio";
+
+    setRisks((prev) => [
+      ...prev,
+      {
+        descripcion: descripcion,
+        impacto: impacto,
+      },
+    ]);
+    closeAddRiskModal();
+  };
+
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+
+  const openAddTaskModal = () => setIsAddTaskModalOpen(true);
+  const closeAddTaskModal = () => setIsAddTaskModalOpen(false);
+
+  // Estado editable local para status
   const [status, setStatus] = useState<"green" | "yellow" | "red">("green");
+
+  // Simula carga de estados desde BD (puedes remplazar con llamada API)
+  const estadosDesdeBD: { value: "green" | "yellow" | "red"; label: string }[] =
+    [
+      { value: "green", label: "Green" },
+      { value: "yellow", label: "Yellow" },
+      { value: "red", label: "Red" },
+    ];
 
   const [tasks, setTasks] = useState<Task[]>([
     {
@@ -119,14 +152,9 @@ export default function Page() {
     },
   ]);
 
-  // Estado para el modal EditDetailTaskModal (igual que antes)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // Nuevo estado para el modal AddDevModal
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
-  // Ejemplo simple lista de usuarios del sistema para el modal AddDevModal
-  // En producción, deberías traerlos desde tu API o estado global
   const allUsers: User[] = [
     { id: "100", email: "marta@example.com" },
     { id: "101", email: "carlos@example.com" },
@@ -134,23 +162,19 @@ export default function Page() {
     { id: "103", email: "pedro@example.com" },
   ];
 
-  // Abre modal detalle tarea
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
   };
 
-  // Cierra modal detalle tarea
   const closeModal = () => {
     setSelectedTask(null);
   };
 
-  // Guardar cambios modal tarea
   const saveTaskChanges = () => {
     alert("Guardar cambios para tarea: " + (selectedTask?.name ?? ""));
     closeModal();
   };
 
-  // Agregar/quitar developers delegado modal tarea
   const addDeveloperToSelectedTask = () => {
     if (!selectedTask) return;
     const newDev: Developer = {
@@ -174,13 +198,10 @@ export default function Page() {
     });
   };
 
-  // Handler para abrir el AddDevModal desde el botón '+'
   const openAddDevModal = () => setIsAddDevModalOpen(true);
   const closeAddDevModal = () => setIsAddDevModalOpen(false);
 
-  // Handler para agregar usuario seleccionado desde AddDevModal a desarrolladores de proyecto
   const handleAddUserToProject = (user: User) => {
-    // Evitar duplicados
     if (developers.find((d) => d.id === user.id)) {
       alert("El desarrollador ya está agregado al proyecto.");
       return;
@@ -191,7 +212,6 @@ export default function Page() {
     ]);
   };
 
-  // Calc días restantes (igual que antes)
   const calcDaysRemaining = () => {
     const now = new Date();
     const due = new Date(dueDate);
@@ -207,28 +227,19 @@ export default function Page() {
     return () => clearInterval(interval);
   }, [dueDate]);
 
-  // Colores estado
   const statusColors: Record<typeof status, string> = {
     green: "#4ade80",
     yellow: "#facc15",
     red: "#f87171",
   };
 
-  // Handlers agregar/quitar devs para ProjectAvatars
-  const addDeveloper = () => {
-    const newId = (developers.length + 1).toString();
-    setDevelopers((prev) => [
-      ...prev,
-      { id: newId, email: `nuevo${newId}@example.com`, photoUrl: null },
-    ]);
-  };
-  const removeDeveloper = () => {
-    setDevelopers((prev) => prev.slice(0, Math.max(prev.length - 1, 0)));
+  // Cuando guardes, puedes actualizar el estado global
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(e.target.value as "green" | "yellow" | "red");
   };
 
   return (
     <>
-      {/* Contenido difuminado y oscurecido al abrir modal detalle tarea */}
       <main
         className={`
           p-10 min-h-screen relative font-sans
@@ -243,7 +254,7 @@ export default function Page() {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         }}
       >
-        {/* Estado proyecto */}
+        {/* Estado editable con select */}
         <div
           title={`Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`}
           className="absolute top-5 right-5 min-w-[100px] h-12 px-3 rounded-lg shadow-md flex items-center justify-center font-bold text-sm text-[#121212]"
@@ -252,7 +263,19 @@ export default function Page() {
             boxShadow: "0 0 10px rgba(0,0,0,0.5)",
           }}
         >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          <select
+            aria-label="Cambiar estado del proyecto"
+            value={status}
+            onChange={handleStatusChange}
+            className="bg-transparent border-none outline-none cursor-pointer font-bold text-sm text-[#121212]"
+            style={{ backgroundColor: "transparent" }}
+          >
+            {estadosDesdeBD.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Nombre editable */}
@@ -266,8 +289,7 @@ export default function Page() {
 
         {/* Fecha y puntos */}
         <div className="flex flex-wrap gap-12 mb-3 text-gray-400 font-semibold text-lg items-start">
-          {/* Fecha editable */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 w-44">
             <input
               type="date"
               value={dueDate}
@@ -319,21 +341,20 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Texto debajo de puntos */}
           <div className="mt-1.5 text-cyan-300 font-semibold text-sm text-center w-[372px] ml-12">
             Faltan {pointsTotal - pointsDone} puntos para completar el proyecto
           </div>
         </div>
 
-        {/* Desarrolladores (pasamos onAdd prop para abrir modal) */}
+        {/* Desarrolladores */}
         <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
           Desarrolladores
         </div>
         <ProjectAvatars
           developers={developers}
           showButtons={true}
-          onAdd={openAddDevModal} // Aquí va la función que abre el modal AddDevModal
-          onRemove={removeDeveloper}
+          onAdd={openAddDevModal}
+          onRemove={() => alert("Borrado")}
         />
 
         {/* Descripción */}
@@ -353,7 +374,7 @@ export default function Page() {
           <button
             type="button"
             aria-label="Crear nueva tarea"
-            onClick={() => alert("+ Nueva tarea (agrega aquí la lógica)")}
+            onClick={openAddTaskModal}
             className="px-6 py-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-md text-[#e0e0e0] font-semibold cursor-pointer shadow-[0_8px_32px_rgba(31,38,135,0.37)] transition duration-300 ease-in-out hover:bg-white/20 hover:shadow-[0_10px_40px_rgba(31,38,135,0.6)] select-none whitespace-nowrap"
           >
             + Nueva Tarea
@@ -367,9 +388,7 @@ export default function Page() {
         <RiskCard
           risks={risks}
           showAddButton={true}
-          onAddRisk={() =>
-            alert("Redirigiendo a pantalla para añadir riesgos...")
-          }
+          onAddRisk={openAddRiskModal}
         />
 
         {/* Panel métricas calidad */}
@@ -406,6 +425,33 @@ export default function Page() {
           onRemoveDeveloper={removeDeveloperFromSelectedTask}
           onSave={saveTaskChanges}
           onClose={closeModal}
+        />
+      )}
+
+      {isAddRiskModalOpen && (
+        <AddRiskModal
+          scopes={alcancesDesdeBD}
+          onSave={handleAddRisk}
+          onClose={closeAddRiskModal}
+        />
+      )}
+
+      {isAddTaskModalOpen && (
+        <AddTaskModal
+          developers={developers} // desarrolladores disponibles en el proyecto
+          onCreate={(newTask) => {
+            setTasks((prev) => [
+              ...prev,
+              {
+                ...newTask,
+                id: `t${prev.length + 1}`,
+                status: "green", // o estado inicial por defecto
+                href: "#",
+              },
+            ]);
+            closeAddTaskModal();
+          }}
+          onClose={closeAddTaskModal}
         />
       )}
 
