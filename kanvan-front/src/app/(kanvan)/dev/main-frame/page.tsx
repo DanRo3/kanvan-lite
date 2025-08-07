@@ -20,37 +20,20 @@ export default function Page() {
 
   return (
     <main
-      style={{
-        padding: 40,
-        backgroundColor: "#181818",
-        minHeight: "100vh",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        color: "#e0e0e0",
-      }}
+      className="p-10 bg-[#181818] min-h-screen font-sans text-[#e0e0e0]"
+      style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
     >
       {/* Encabezado principal de la página */}
-      <h1
-        style={{
-          margin: 0,
-          fontWeight: 700,
-          fontSize: "2rem",
-          marginBottom: 32,
-        }}
-      >
-        Tus Proyectos
-      </h1>
+      <h1 className="m-0 font-bold text-2xl mb-8">Tus Proyectos</h1>
 
       {/* Contenedor en grid: 4 columnas, gap entre cards */}
       <section
-        style={{
-          marginTop: 0,
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 24,
-          maxWidth: 1360,
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
+        className="
+          mt-0
+          grid grid-cols-4 gap-6
+          max-w-[1360px]
+          mx-auto
+        "
       >
         {projects.map((proj, idx) => (
           <ProjectCard key={idx} {...proj} />

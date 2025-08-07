@@ -12,9 +12,9 @@ interface ProjectCardProps {
 }
 
 const statusColors: Record<Status, string> = {
-  green: "#4ade80",
-  yellow: "#facc15",
-  red: "#f87171",
+  green: "bg-green-400 text-gray-800 shadow-md",
+  yellow: "bg-yellow-400 text-gray-800 shadow-md",
+  red: "bg-red-400 text-gray-800 shadow-md",
 };
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -25,79 +25,30 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   dueDate,
   href,
 }) => {
-  const color = statusColors[status];
+  const statusStyle = statusColors[status];
   const dueDateObj = typeof dueDate === "string" ? new Date(dueDate) : dueDate;
 
   return (
-    <>
-      <a href={href} className="project-card">
-        <div className="status" style={{ backgroundColor: color }}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </div>
-        <div className="name">{name}</div>
-        <div className="points">
-          {pointsDone} / {pointsTotal} puntos realizados
-        </div>
-        <div className="due-date">
-          Fecha de entrega: {dueDateObj.toLocaleDateString()}
-        </div>
-      </a>
+    <a
+      href={href}
+      className="relative flex flex-col gap-3 p-10 pt-14 max-w-xs rounded-xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_8px_32px_rgba(31,38,135,0.37)] text-gray-300 font-sans no-underline cursor-pointer transition-transform transition-shadow transition-bg duration-300 ease-in-out hover:-translate-y-2 hover:shadow-[0_15px_40px_rgba(31,38,135,0.7)] hover:bg-white/15"
+    >
+      <div
+        className={`absolute top-5 right-5 px-3 py-1.5 rounded-lg font-semibold w-fit select-none whitespace-nowrap ${statusStyle}`}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </div>
 
-      <style jsx>{`
-        .project-card {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          padding: 40px 20px 20px 20px; /* espacio arriba para el estado */
-          max-width: 320px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-          color: #e0e0e0;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-          text-decoration: none;
-          cursor: pointer;
-          transition: transform 0.3s ease, box-shadow 0.3s ease,
-            background 0.3s ease;
-        }
-        .project-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 15px 40px rgba(31, 38, 135, 0.7);
-          background: rgba(255, 255, 255, 0.15);
-        }
-        .status {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          padding: 4px 12px;
-          border-radius: 8px;
-          color: #1f2937;
-          font-weight: 600;
-          width: fit-content;
-          user-select: none;
-          white-space: nowrap;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        .name {
-          font-weight: 700;
-          font-size: 1.25rem;
-          width: 100%;
-          margin: 16px 0 0 0; /* margen arriba para dar más espacio */
-          word-break: break-word;
-        }
-        .points {
-          font-weight: 500;
-          font-size: 1rem;
-        }
-        .due-date {
-          font-size: 0.9rem;
-          color: #b0b0b0;
-        }
-      `}</style>
-    </>
+      <div className="font-extrabold text-lg w-full mt-4 break-words">
+        {name}
+      </div>
+      <div className="font-medium text-base">
+        {pointsDone} / {pointsTotal} puntos realizados
+      </div>
+      <div className="text-sm text-gray-400">
+        Fecha de entrega: {dueDateObj.toLocaleDateString()}
+      </div>
+    </a>
   );
 };
 
