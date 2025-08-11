@@ -126,6 +126,20 @@ export class ProjectsService {
         normalBugs: true,
         lowBugs: true,
         testsCoberage: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        developers: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         tasks: {
           select: {
             id: true,
