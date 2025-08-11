@@ -19,7 +19,6 @@ export class CreateTaskDto {
   @ApiProperty()
   points: number;
 
-  @IsUUID()
   @ApiProperty()
   projectId: string;
 

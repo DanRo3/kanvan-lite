@@ -21,16 +21,11 @@ export class CreateProjectDto {
   @ApiProperty()
   description?: string;
 
-  @IsDateString()
   @ApiProperty()
-  deadline: string;
+  deadline: Date;
 
   @IsInt()
   @Min(1)
   @ApiProperty()
   pointsBudget: number;
-
-  @IsEnum(ProjectStatus)
-  @ApiProperty()
-  status: ProjectStatus;
 }

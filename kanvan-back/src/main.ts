@@ -13,14 +13,12 @@ const SWAGGER_PATH = '/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const port = app.get(ConfigService).get<number>('APP_PORT') || '3000';
+  const port = app.get(ConfigService).get<number>('APP_PORT') || '3001';
 
   // Configuración global de validación
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
       transformOptions: {
         enableImplicitConversion: true,
       },

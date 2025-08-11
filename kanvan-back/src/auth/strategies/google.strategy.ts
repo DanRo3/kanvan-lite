@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, type VerifyCallback } from 'passport-google-oauth20';
 import { AuthService } from '../auth.service';
@@ -9,24 +9,20 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL!,
-      scope: ['email', 'profile'],
-      passReqToCallback: true,
     });
   }
 
-  async validate(
-    req: Request,
-    accessToken: string,
-    refreshToken: string,
-    profile: any,
-    done: VerifyCallback,
-  ): Promise<any> {
-    try {
-      const user = await this.authService.validateOAuthUser(profile, 'google');
-      done(null, user);
-    } catch (error) {
-      done(error, false);
+  async validate(accessToken: string, refreshToken: string, profile: any) {
+    if (!profile.emails || !profile.emails.length) {
+      throw new UnauthorizedException('No email found from Google provider');
     }
+    const user = {
+      email: profile.emails[0].value,
+      name: profile.displayName,
+      picture: profile.photos?.[0]?.value,
+      provider: 'google',
+      providerId: profile.id,
+    };
+    return user;
   }
 }

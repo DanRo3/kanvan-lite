@@ -1,7 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { type User, UserRole } from '@prisma/client';
+import axios from 'axios';
+
+interface SocialUser {
+  email: string;
+  name?: string;
+  picture?: string;
+  provider: string;
+  providerId: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -10,88 +19,121 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateOAuthUser(profile: any, provider: string): Promise<User> {
-    const email = profile.emails?.[0]?.value;
-    const name = profile.displayName || profile.username;
-    const image = profile.photos?.[0]?.value;
-
-    if (!email) {
-      throw new Error('Email not provided by OAuth provider');
-    }
-
+  async validateOAuthLogin(socialUser: SocialUser) {
+    // Busca usuario por email
     let user = await this.prisma.user.findUnique({
-      where: { email },
+      where: { email: socialUser.email },
     });
 
-    if (!user) {
-      user = await this.prisma.user.create({
+    if (user) {
+      // Actualiza info si hay cambios
+      user = await this.prisma.user.update({
+        where: { email: socialUser.email },
         data: {
-          email,
-          name,
-          image,
-          role: UserRole.DEVELOPER, // Default role
+          name: socialUser.name,
+          image: socialUser.picture,
         },
       });
     } else {
-      // Update user info if needed
-      user = await this.prisma.user.update({
-        where: { id: user.id },
+      // Crea nuevo usuario
+      user = await this.prisma.user.create({
         data: {
-          name: name || user.name,
-          image: image || user.image,
+          email: socialUser.email,
+          name: socialUser.name,
+          image: socialUser.picture,
+          role: 'DEVELOPER', // Valor por defecto
         },
       });
     }
 
-    return user;
-  }
-
-  async login(user: User) {
+    // Genera JWT con los claims solicitados
     const payload = {
-      sub: user.id,
+      userId: user.id,
       email: user.email,
+      name: user.name,
       role: user.role,
     };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        role: user.role,
-      },
-    };
+    const token = this.jwtService.sign(payload);
+
+    return { accessToken: token, user };
   }
 
-  async loginWithOAuth(profile: any, provider: string) {
-    // Obtiene o crea el usuario usando el perfil OAuth
-    const user = await this.validateOAuthUser(profile, provider);
+  // Intercambia el code por el token y perfil (ejemplo para Google)
+  async loginWithGoogleCode(code: string, redirectUri: string) {
+    const params = new URLSearchParams();
+    params.append('code', code);
+    params.append('client_id', process.env.GOOGLE_CLIENT_ID ?? '');
+    params.append('client_secret', process.env.GOOGLE_CLIENT_SECRET ?? '');
+    params.append('redirect_uri', redirectUri);
+    params.append('grant_type', 'authorization_code');
 
-    // Prepara el payload asegurando incluir nombre como claim
-    const payload = {
-      sub: user.id,
-      name: user.name, // incluye nombre
-      role: user.role,
-    };
-
-    // Genera y retorna el JWT junto con los datos del usuario
-    return {
-      access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-        role: user.role,
+    // Paso 1: Intercambiar código por token
+    const tokenRes = await axios.post(
+      'https://oauth2.googleapis.com/token',
+      params.toString(),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       },
-    };
+    );
+
+    const { access_token } = tokenRes.data;
+
+    // Paso 2: Obtener perfil
+    const profileRes = await axios.get(
+      'https://www.googleapis.com/oauth2/v2/userinfo',
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      },
+    );
+
+    const profile = profileRes.data;
+
+    return this.validateOAuthLogin({
+      email: profile.email,
+      name: profile.name,
+      picture: profile.picture,
+      provider: 'google',
+      providerId: profile.id,
+    });
   }
 
-  async validateUser(userId: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
+  async loginWithGithubCode(code: string) {
+    // Paso 1: Intercambiar código por token
+    const tokenRes = await axios.post(
+      `https://github.com/login/oauth/access_token`,
+      {
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        code,
+      },
+      { headers: { Accept: 'application/json' } },
+    );
+
+    const { access_token } = tokenRes.data;
+
+    // Paso 2: Obtener perfil del usuario
+    const profileRes = await axios.get('https://api.github.com/user', {
+      headers: { Authorization: `token ${access_token}` },
+    });
+
+    const emailsRes = await axios.get('https://api.github.com/user/emails', {
+      headers: { Authorization: `token ${access_token}` },
+    });
+
+    const primaryEmail = emailsRes.data.find((email) => email.primary)?.email;
+
+    if (!primaryEmail)
+      throw new UnauthorizedException('No primary email found from Github');
+
+    const profile = profileRes.data;
+
+    return this.validateOAuthLogin({
+      email: primaryEmail,
+      name: profile.name || profile.login,
+      picture: profile.avatar_url,
+      provider: 'github',
+      providerId: profile.id.toString(),
     });
   }
 }

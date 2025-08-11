@@ -15,44 +15,61 @@ import { CreateProjectDto } from './create-project.dto';
 export class UpdateProjectDto extends PartialType(CreateProjectDto) {
   @IsString()
   @IsNotEmpty()
-  @ApiProperty()
-  name: string;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  name?: string;
 
   @IsString()
-  @IsOptional()
   @ApiProperty()
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
   description?: string;
 
-  @IsDateString()
   @ApiProperty()
-  deadline: string;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  deadline?: Date;
 
   @IsInt()
   @Min(1)
   @ApiProperty()
-  pointsBudget: number;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  pointsBudget?: number;
 
   @IsEnum(ProjectStatus)
   @ApiProperty()
-  status: ProjectStatus;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  status?: ProjectStatus;
 
   @IsInt()
   @ApiProperty()
-  pointsUsed: number;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  pointsUsed?: number;
 
   @IsInt()
   @ApiProperty()
-  criticalBugs: number;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  criticalBugs?: number;
 
   @IsInt()
   @ApiProperty()
-  normalBugs: number;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  normalBugs?: number;
 
   @IsInt()
   @ApiProperty()
-  lowBugs: number;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  lowBugs?: number;
 
   @IsInt()
   @ApiProperty()
-  testCoberage: number;
+  @IsOptional()
+  @ApiProperty({ required: false, nullable: true })
+  testCoberage?: number;
 }

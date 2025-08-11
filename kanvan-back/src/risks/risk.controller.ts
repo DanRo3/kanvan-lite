@@ -14,10 +14,16 @@ import { RiskService } from './risk.service';
 import { CreateRiskDto } from './dto/create-risk.dto';
 import { UpdateRiskDto } from './dto/update-risk.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { User } from '@prisma/client';
+import { UserRole, type User } from '@prisma/client';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('api/risks')
-@UseGuards(AuthGuard('jwt')) // protege todas las rutas con JWT
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.OWNER, UserRole.DEVELOPER)
+@ApiBearerAuth('jwt')
 export class RiskController {
   constructor(private readonly riskService: RiskService) {}
 

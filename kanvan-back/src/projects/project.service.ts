@@ -12,16 +12,18 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createProjectDto: CreateProjectDto, user: User) {
+  async create(createProjectDto: CreateProjectDto, user) {
     // if (user.role !== UserRole.OWNER) {
     //   throw new ForbiddenException('Only owners can create projects');
     // }
+
+    console.log(user);
 
     return this.prisma.project.create({
       data: {
         ...createProjectDto,
         deadline: new Date(createProjectDto.deadline),
-        ownerId: user.id,
+        ownerId: user.userId,
         criticalBugs: 0,
         normalBugs: 0,
         lowBugs: 0,
@@ -151,7 +153,7 @@ export class ProjectsService {
     return project;
   }
 
-  async checkUserAccess(projectId: string, user: User): Promise<boolean> {
+  async checkUserAccess(projectId: string, user): Promise<boolean> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
       include: {
@@ -159,26 +161,29 @@ export class ProjectsService {
       },
     });
 
+    console.log(project);
+
     if (!project) {
+      console.log(1111);
+
       return false;
     }
 
-    if (user.role === UserRole.OWNER && project.ownerId === user.id) {
+    if (user.role === UserRole.OWNER && project.ownerId === user.userId) {
+      console.log(2222);
       return true;
     }
 
     if (user.role === UserRole.DEVELOPER) {
-      return project.developers.some((dev) => dev.id === user.id);
+      console.log(3333);
+
+      return project.developers.some((dev) => dev.id === user.userId);
     }
 
     return false;
   }
 
-  async update(
-    projectId: string,
-    updateProjectDto: UpdateProjectDto,
-    user: User,
-  ) {
+  async update(projectId: string, updateProjectDto: UpdateProjectDto, user) {
     // Verificar que el proyecto existe
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
@@ -188,7 +193,7 @@ export class ProjectsService {
     }
 
     // Validar permisos del usuario: solo Owner puede actualizar su proyecto
-    if (user.role !== UserRole.OWNER || project.ownerId !== user.id) {
+    if (user.role !== UserRole.OWNER || project.ownerId !== user.userId) {
       throw new ForbiddenException(
         'You do not have permission to update this project',
       );

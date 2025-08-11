@@ -15,15 +15,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { type User, UserRole } from '@prisma/client';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('api/projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.OWNER)
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.DEVELOPER)
   @ApiBody({ type: CreateProjectDto })
   create(
     //createProjectDto: CreateProjectDto,
@@ -34,7 +36,8 @@ export class ProjectsController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.DEVELOPER)
   findAll(@CurrentUser() user: User) {
     return this.projectsService.findAll(user);
@@ -46,7 +49,8 @@ export class ProjectsController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER)
   update(
     @Param('id') id: string,

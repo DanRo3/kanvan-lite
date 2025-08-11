@@ -10,7 +10,16 @@ export default function setupSwagger(
     .setDescription('### API of a library app.')
     .setLicense('MIT', 'https://opensource.org/license/mit')
     .setVersion('1.0.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'jwt', // Este es el nombre del esquema, luego se referencia así
+    )
     .build();
 
   const doc = SwaggerModule.createDocument(app, options);

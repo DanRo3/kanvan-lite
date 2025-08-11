@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateTaskDto } from './dto/create-task.dto';
-import type { UpdateTaskStatusDto } from './dto/update-task.dto';
+import type { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import type { UpdateTaskDto } from './dto/update-task.dto';
 import { type User, TaskStatus } from '@prisma/client';
 import { ProjectsService } from '../projects/project.service';
 
@@ -16,8 +17,7 @@ export class TasksService {
     private projectsService: ProjectsService,
   ) {}
 
-  async create(createTaskDto: CreateTaskDto, user: User) {
-    // Check if user has access to the project
+  async create(createTaskDto: CreateTaskDto, user) {
     const hasAccess = await this.projectsService.checkUserAccess(
       createTaskDto.projectId,
       user,
@@ -31,7 +31,7 @@ export class TasksService {
       data: {
         ...createTaskDto,
         developers: {
-          connect: { id: user.id },
+          connect: { id: user.userId },
         },
       },
       include: {
@@ -42,6 +42,43 @@ export class TasksService {
             name: true,
             email: true,
           },
+        },
+      },
+    });
+  }
+
+  async updateTask(id: string, updateTaskDto: UpdateTaskDto, user: User) {
+    const task = await this.prisma.task.findUnique({
+      where: { id },
+      include: { project: true },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Verificar acceso
+    const hasAccess = await this.projectsService.checkUserAccess(
+      task.projectId,
+      user,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException('Access denied to this project');
+    }
+
+    return this.prisma.task.update({
+      where: { id },
+      data: {
+        title: updateTaskDto.title,
+        points: updateTaskDto.points,
+        developmentHours: updateTaskDto.developmentHours,
+        status: updateTaskDto.status,
+      },
+      include: {
+        project: true,
+        developers: {
+          select: { id: true, name: true, email: true },
         },
       },
     });
@@ -64,7 +101,6 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    // Check if user has access to the project
     const hasAccess = await this.projectsService.checkUserAccess(
       task.projectId,
       user,
@@ -74,12 +110,10 @@ export class TasksService {
       throw new ForbiddenException('Access denied to this project');
     }
 
-    // Use transaction to update task status and project points
     return this.prisma.$transaction(async (prisma) => {
       const oldStatus = task.status;
       const newStatus = updateTaskStatusDto.status;
 
-      // Update task status
       const updatedTask = await prisma.task.update({
         where: { id },
         data: { status: newStatus },
@@ -95,25 +129,20 @@ export class TasksService {
         },
       });
 
-      // Calculate points change
       let pointsChange = 0;
 
-      // If task is moving to DEPLOYED, add points
       if (
         newStatus === TaskStatus.DEPLOYED &&
         oldStatus !== TaskStatus.DEPLOYED
       ) {
         pointsChange = task.points;
-      }
-      // If task is moving from DEPLOYED to another status, subtract points
-      else if (
+      } else if (
         oldStatus === TaskStatus.DEPLOYED &&
         newStatus !== TaskStatus.DEPLOYED
       ) {
         pointsChange = -task.points;
       }
 
-      // Update project points if there's a change
       if (pointsChange !== 0) {
         await prisma.project.update({
           where: { id: task.projectId },
@@ -126,6 +155,68 @@ export class TasksService {
       }
 
       return updatedTask;
+    });
+  }
+
+  async findAllByProject(projectId: string, user: User) {
+    // Verificar acceso del usuario al proyecto
+    const hasAccess = await this.projectsService.checkUserAccess(
+      projectId,
+      user,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException('Access denied to this project');
+    }
+
+    return this.prisma.task.findMany({
+      where: { projectId },
+      include: {
+        developers: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        project: true,
+      },
+    });
+  }
+
+  async remove(id: string, user: User) {
+    const task = await this.prisma.task.findUnique({
+      where: { id },
+      include: { project: true },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    const hasAccess = await this.projectsService.checkUserAccess(
+      task.projectId,
+      user,
+    );
+
+    if (!hasAccess) {
+      throw new ForbiddenException('Access denied to this project');
+    }
+
+    // Opcional: si el task estaba en status DEPLOYED, descontar puntos
+    if (task.status === TaskStatus.DEPLOYED) {
+      await this.prisma.project.update({
+        where: { id: task.projectId },
+        data: {
+          pointsUsed: {
+            decrement: task.points,
+          },
+        },
+      });
+    }
+
+    return this.prisma.task.delete({
+      where: { id },
     });
   }
 }

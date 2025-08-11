@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-github2';
 import { AuthService } from '../auth.service';
@@ -14,16 +14,19 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     });
   }
 
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: any,
-  ): Promise<any> {
-    try {
-      const user = await this.authService.validateOAuthUser(profile, 'github');
-      return user;
-    } catch (error) {
-      throw error;
-    }
+  async validate(accessToken: string, refreshToken: string, profile: any) {
+    const email = profile.emails?.[0]?.value;
+    if (!email)
+      throw new UnauthorizedException('No email found from Github provider');
+
+    const user = {
+      email,
+      name: profile.displayName || profile.username,
+      picture: profile.photos?.[0]?.value,
+      provider: 'github',
+      providerId: profile.id,
+    };
+
+    return user;
   }
 }
