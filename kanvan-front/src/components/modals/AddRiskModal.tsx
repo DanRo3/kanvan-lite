@@ -1,8 +1,9 @@
 "use client";
+import { RiskScope } from "@/api/projects/interface/output/create-project.output.dto";
 import React, { useState } from "react";
 
 interface AddRiskModalProps {
-  scopes: string[]; // Lista de alcances desde BD
+  scopes: RiskScope[]; // Lista de alcances desde BD
   onSave: (riskDescription: string, scope: string) => void;
   onClose: () => void;
 }
@@ -58,7 +59,7 @@ const AddRiskModal: React.FC<AddRiskModalProps> = ({
           <select
             id="scope-select"
             value={selectedScope}
-            onChange={(e) => setSelectedScope(e.target.value)}
+            onChange={(e) => setSelectedScope(e.target.value as RiskScope)}
             className="mb-6 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
           >
             {scopes.map((scope) => (

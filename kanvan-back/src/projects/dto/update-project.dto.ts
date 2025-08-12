@@ -71,5 +71,5 @@ export class UpdateProjectDto extends PartialType(CreateProjectDto) {
   @ApiProperty()
   @IsOptional()
   @ApiProperty({ required: false, nullable: true })
-  testCoberage?: number;
+  testsCoberage?: number;
 }

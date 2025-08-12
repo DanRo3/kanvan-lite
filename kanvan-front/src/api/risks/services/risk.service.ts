@@ -4,7 +4,7 @@ import UpdateRiskInputDto from "../interface/input/update-risk.input.dto";
 import CreateRiskOutputDto from "../interface/output/create-risk.output.dto";
 import UpdateRiskOutputDto from "../interface/output/update-risk.output.dto";
 
-const BASE_PATH = "/risks";
+const BASE_PATH = "/api/risks";
 
 export const getAllRisks = async (): Promise<CreateRiskOutputDto[]> => {
   try {

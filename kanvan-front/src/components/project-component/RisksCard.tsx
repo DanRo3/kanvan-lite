@@ -1,25 +1,29 @@
-import React from "react";
-
-export interface Risk {
-  descripcion: string;
-  impacto: "bajo" | "medio" | "alto";
-}
+import { Risk } from "@/api/risks/interface/input/risk.input.dto";
+import { FaTrashAlt } from "react-icons/fa";
 
 interface RiskCardProps {
   risks: Risk[];
   onAddRisk?: () => void;
-  showAddButton?: boolean; // Nueva prop opcional
+  onDeleteRisk?: (riskId: string) => void;
+  showAddButton?: boolean;
 }
 
 const RiskCard: React.FC<RiskCardProps> = ({
   risks,
   onAddRisk,
-  showAddButton = true, // Por defecto muestra el botón
+  onDeleteRisk,
+  showAddButton = true,
 }) => {
   const colorMap: Record<string, string> = {
-    bajo: "bg-green-400",
-    medio: "bg-yellow-400",
-    alto: "bg-red-400",
+    LOW: "bg-green-400",
+    NORMAL: "bg-yellow-400",
+    CRITICAL: "bg-red-400",
+  };
+
+  const labelMap: Record<string, string> = {
+    LOW: "bajo",
+    NORMAL: "normal",
+    CRITICAL: "crítico",
   };
 
   return (
@@ -36,7 +40,6 @@ const RiskCard: React.FC<RiskCardProps> = ({
         Registro de Riesgos y Bloqueos
       </h2>
 
-      {/* Botón + en esquina superior derecha, renderizado solo si showAddButton es true */}
       {showAddButton && (
         <button
           type="button"
@@ -58,7 +61,6 @@ const RiskCard: React.FC<RiskCardProps> = ({
         </button>
       )}
 
-      {/* Lista de riesgos */}
       <div className="mt-3 max-h-52 overflow-y-auto flex flex-col gap-3 pr-3">
         {risks.length === 0 && (
           <p className="text-[#c2c2c2] italic">
@@ -67,7 +69,8 @@ const RiskCard: React.FC<RiskCardProps> = ({
         )}
 
         {risks.map((risk, idx) => {
-          const bgColor = colorMap[risk.impacto] ?? "bg-gray-400";
+          const bgColor = colorMap[risk.scope] ?? "bg-gray-400";
+          const label = labelMap[risk.scope] ?? "desconocido";
 
           return (
             <div
@@ -78,11 +81,31 @@ const RiskCard: React.FC<RiskCardProps> = ({
                 bg-white/7
               "
             >
-              <span className="flex-1 text-[#e0e0e0]">{risk.descripcion}</span>
-              <div
-                title={`Impacto: ${risk.impacto}`}
-                className={`${bgColor} w-6 h-6 rounded-sm`}
-              />
+              {/* Nombre del riesgo */}
+              <span className="flex-1 text-[#e0e0e0] truncate">
+                {risk.name}
+              </span>
+
+              {/* Estado con rectángulo coloreado con tamaño fijo y centrado */}
+              <span
+                className={`${bgColor} text-gray-900 text-xs px-2 py-0.5 rounded select-none font-semibold min-w-[60px] text-center`}
+                title={`Impacto: ${label}`}
+              >
+                {label}
+              </span>
+
+              {/* Botón eliminar */}
+              {onDeleteRisk && risk.id && (
+                <button
+                  onClick={() => onDeleteRisk(risk.id)}
+                  aria-label="Eliminar riesgo"
+                  className="text-red-500 hover:text-red-700 transition p-1"
+                  title="Eliminar riesgo"
+                  type="button"
+                >
+                  <FaTrashAlt />
+                </button>
+              )}
             </div>
           );
         })}

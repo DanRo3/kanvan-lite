@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
-import RiskCard, { Risk } from "@/components/project-component/RisksCard";
+import Risk from "@/api/risks/interface/input/risk.input.dto";
+import RiskCard from "@/components/project-component/RisksCard";
 import QualityCard from "@/components/project-component/QualityCard";
 import TasksProjectComponent from "@/components/project-component/TasksProjectComponent";
 import ProjectAvatars from "@/components/project-component/ProjectAvatars";
@@ -14,6 +15,10 @@ import AddTaskModal from "@/components/modals/AddTaskModal";
 
 import { getProjectById } from "@/api/projects/service/project.service";
 import CreateProjectOutputDto from "@/api/projects/interface/output/create-project.output.dto";
+
+import { createRisk, deleteRisk } from "@/api/risks/services/risk.service";
+import CreateRiskInputDto from "@/api/risks/interface/input/create-risk.input.dto";
+import { RiskScope } from "@/api/risks/enums/risk-scope.enum";
 
 interface Developer {
   id: string;
@@ -64,7 +69,7 @@ export default function Page() {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
-  const alcancesDesdeBD = ["Alcance 1", "Alcance 2", "Alcance 3"];
+  const scopesList: RiskScope[] = ["LOW", "NORMAL", "CRITICAL"];
   const estadosDesdeBD: { value: "green" | "yellow" | "red"; label: string }[] =
     [
       { value: "green", label: "Green" },
@@ -108,13 +113,16 @@ export default function Page() {
         );
         setRisks(
           data.risks.map((r) => ({
-            descripcion: r.name ?? "",
-            impacto:
-              r.scope === 2 /* CRITICAL*/
-                ? "alto"
-                : r.scope === 1 /* NORMAL */
-                ? "medio"
-                : "bajo",
+            name: r.name ?? "",
+            scope:
+              typeof r.scope === "string"
+                ? r.scope.toUpperCase() // asegurar mayúsculas si quieres
+                : r.scope === 2
+                ? "CRITICAL"
+                : r.scope === 1
+                ? "NORMAL"
+                : "LOW",
+            id: r.id,
           }))
         );
 
@@ -157,24 +165,62 @@ export default function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]); // id como dependencia
 
-  // Funciones modales y handlers similares a los tuyos
-
+  // Abrir y cerrar modal de agregar riesgo
   const openAddRiskModal = () => setIsAddRiskModalOpen(true);
   const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
 
-  const handleAddRisk = (descripcion: string, alcance: string) => {
-    let impacto: "bajo" | "medio" | "alto" = "bajo";
-    if (alcance.toLowerCase().includes("alto")) impacto = "alto";
-    else if (alcance.toLowerCase().includes("medio")) impacto = "medio";
+  const handleAddRisk = async (riskDescription: string, scope: string) => {
+    try {
+      // Convertir a enum string esperado
+      let scopeEnum: RiskScope;
 
-    setRisks((prev) => [
-      ...prev,
-      {
-        descripcion,
-        impacto,
-      },
-    ]);
-    closeAddRiskModal();
+      switch (scope.toUpperCase()) {
+        case "CRITICAL":
+        case "ALTO":
+          scopeEnum = RiskScope.CRITICAL;
+          break;
+        case "NORMAL":
+        case "MEDIO":
+          scopeEnum = RiskScope.NORMAL;
+          break;
+        default:
+          scopeEnum = RiskScope.LOW;
+      }
+
+      const riskData: CreateRiskInputDto = {
+        projectId: projectData?.id || "",
+        name: riskDescription,
+        scope: scopeEnum, // Ahora cadena "LOW"|"NORMAL"|"CRITICAL"
+      };
+
+      const createdRisk = await createRisk(riskData);
+
+      setRisks((prev) => [
+        ...prev,
+        {
+          name: createdRisk.name,
+          scope: createdRisk.scope,
+          id: createdRisk.id,
+        },
+      ]);
+
+      closeAddRiskModal();
+    } catch (error) {
+      console.error("Error creando riesgo:", error);
+      alert("Error al crear el riesgo, inténtalo nuevamente.");
+    }
+  };
+
+  // Función para eliminar riesgo y actualizar estado
+  const handleDeleteRisk = async (riskId: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este riesgo?")) return;
+    try {
+      await deleteRisk(riskId);
+      setRisks((prev) => prev.filter((r) => (r as any).id !== riskId));
+    } catch (error) {
+      console.error("Error eliminando riesgo:", error);
+      alert("Error al eliminar el riesgo, inténtalo nuevamente.");
+    }
   };
 
   const openAddTaskModal = () => setIsAddTaskModalOpen(true);
@@ -399,6 +445,7 @@ export default function Page() {
           risks={risks}
           showAddButton={true}
           onAddRisk={openAddRiskModal}
+          onDeleteRisk={handleDeleteRisk} // Pasamos la función para eliminar
         />
 
         <QualityCard editable={true} />
@@ -437,7 +484,7 @@ export default function Page() {
 
       {isAddRiskModalOpen && (
         <AddRiskModal
-          scopes={alcancesDesdeBD}
+          scopes={scopesList}
           onSave={handleAddRisk}
           onClose={closeAddRiskModal}
         />
