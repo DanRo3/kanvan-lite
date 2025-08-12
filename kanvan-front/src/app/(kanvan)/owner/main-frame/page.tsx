@@ -1,28 +1,47 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import ProjectCard from "@/components/project-component/ProjectCard";
 import AddProjectModal from "@/components/modals/AddProjectModal";
+import { getAllProjects } from "@/api/projects/service/project.service";
+import CreateProjectOutputDto from "@/api/projects/interface/output/create-project.output.dto";
+
+type Status = "Completado" | "En_Progreso" | "Planeado";
+
+function mapStatus(status?: string): Status {
+  if (!status) return "Completado";
+  const st = status.toLowerCase();
+  if (st === "completed" || st === "deployed") return "Completado";
+  if (st === "in_progress") return "En_Progreso";
+  if (st === "planned" || st === "delayed" || st === "cancelled")
+    return "Planeado";
+  return "Completado";
+}
+
+function mapProjectsToCards(projects: CreateProjectOutputDto[]) {
+  return projects.map((proj) => ({
+    name: proj.name,
+    status: mapStatus(proj.status),
+    pointsDone: proj.pointsUsed ?? 0,
+    pointsTotal: proj.pointsBudget ?? 0,
+    dueDate: proj.deadline ?? null,
+    href: `/owner/project-details/${proj.id}`,
+  }));
+}
 
 export default function Page() {
-  const baseProject = {
-    name: "Proyecto Kanvan Prueba con nombre largo",
-    status: "green" as const,
-    pointsDone: 12,
-    pointsTotal: 20,
-    dueDate: "2025-09-01",
-    href: "/owner/project-details",
-  };
-
-  const projects = Array.from({ length: 10 }, (_, i) => ({
-    ...baseProject,
-    name: `${baseProject.name} #${i + 1}`,
-    href: `/owner/project-details/`,
-  }));
+  const [projects, setProjects] = useState<
+    Array<{
+      name: string;
+      status: Status;
+      pointsDone: number;
+      pointsTotal: number;
+      dueDate: string | Date | null;
+      href: string;
+    }>
+  >([]);
 
   const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
-
-  const openAddProjectModal = () => setIsAddProjectModalOpen(true);
-  const closeAddProjectModal = () => setIsAddProjectModalOpen(false);
 
   const exampleDevelopers = [
     { id: "1", email: "ana@example.com", photoUrl: null },
@@ -30,22 +49,32 @@ export default function Page() {
     { id: "3", email: "luisa@example.com", photoUrl: null },
   ];
 
-  const handleCreateProject = (newProjectData: {
-    name: string;
-    description: string;
-    points: number;
-    dueDate: string;
-    developers: typeof exampleDevelopers;
-  }) => {
-    // Aquí crea un proyecto nuevo con ID único y cualquier estado o href que necesites
-    const newProject = {
-      ...newProjectData,
-      status: "green" as const,
-      pointsDone: 0,
-      pointsTotal: newProjectData.points,
-      href: "/owner/project-details/new", // o como prefieras
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await getAllProjects();
+        const mapped = mapProjectsToCards(data);
+        setProjects(mapped);
+      } catch (error) {
+        console.error("Error cargando proyectos:", error);
+      }
     };
-    setProjects((prev) => [...prev, newProject]);
+    fetchProjects();
+  }, []);
+
+  const openAddProjectModal = () => setIsAddProjectModalOpen(true);
+  const closeAddProjectModal = () => setIsAddProjectModalOpen(false);
+
+  const handleCreateProject = (createdProject: CreateProjectOutputDto) => {
+    const newCard = {
+      name: createdProject.name,
+      status: mapStatus(createdProject.status),
+      pointsDone: createdProject.pointsUsed ?? 0,
+      pointsTotal: createdProject.pointsBudget ?? 0,
+      dueDate: createdProject.deadline ?? null,
+      href: `/owner/project-details/${createdProject.id}`,
+    };
+    setProjects((prev) => [...prev, newCard]);
     closeAddProjectModal();
   };
 
@@ -54,10 +83,8 @@ export default function Page() {
       className="p-10 bg-[#181818] min-h-screen font-sans text-[#e0e0e0] relative"
       style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}
     >
-      {/* Encabezado principal de la página */}
       <h1 className="m-0 font-bold text-2xl mb-8">Proyectos Actuales</h1>
 
-      {/* Botón en esquina superior derecha */}
       <button
         type="button"
         aria-label="Crear nuevo proyecto"
@@ -78,25 +105,24 @@ export default function Page() {
         + Nuevo Proyecto
       </button>
 
-      {/* Contenedor en grid: 4 columnas, gap entre cards */}
       <section
         className="
           mt-0
-          grid grid-cols-4 gap-6
+          grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6
           max-w-[1360px]
           mx-auto
         "
       >
-        {projects.map((proj, idx) => (
-          <ProjectCard key={idx} {...proj} />
+        {projects.map((proj, id) => (
+          <ProjectCard key={id} {...proj} />
         ))}
       </section>
 
       {isAddProjectModalOpen && (
         <AddProjectModal
-          developers={exampleDevelopers} // Pasa los desarrolladores disponibles
-          onCreate={handleCreateProject} // Handler guardar proyecto
-          onClose={closeAddProjectModal} // Handler cerrar modal
+          developers={exampleDevelopers}
+          onCreate={handleCreateProject}
+          onClose={closeAddProjectModal}
         />
       )}
     </main>

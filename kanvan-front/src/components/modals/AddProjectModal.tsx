@@ -4,6 +4,7 @@ import ProjectAvatars, {
   Developer,
 } from "@/components/project-component/ProjectAvatars";
 import AddDevModal from "@/components/modals/AddDevModal";
+import { createProject } from "@/api/projects/service/project.service";
 
 interface User {
   id: string;
@@ -12,13 +13,7 @@ interface User {
 
 interface AddProjectModalProps {
   developers: Developer[]; // usuarios disponibles para asignar
-  onCreate: (project: {
-    name: string;
-    description: string;
-    points: number;
-    dueDate: string;
-    developers: Developer[];
-  }) => void;
+  onCreate: (project: any) => void; // puedes tipar si quieres mejor
   onClose: () => void;
 }
 
@@ -32,19 +27,13 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
   const [points, setPoints] = useState(0);
   const [dueDate, setDueDate] = useState("");
 
-  // Estado local para desarrolladores asignados a este nuevo proyecto
   const [selectedDevelopers, setSelectedDevelopers] = useState<Developer[]>([]);
-
-  // Estado para controlar modal agregar devs
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // para controlar estado de carga
 
-  // Abrir modal AddDevModal
   const openAddDevModal = () => setIsAddDevModalOpen(true);
-
-  // Cerrar modal AddDevModal
   const closeAddDevModal = () => setIsAddDevModalOpen(false);
 
-  // Agregar usuario seleccionado desde AddDevModal si no está duplicado
   const handleAddUserToSelected = (user: User) => {
     if (selectedDevelopers.find((d) => d.id === user.id)) {
       alert("El desarrollador ya está agregado al proyecto.");
@@ -57,13 +46,12 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
     closeAddDevModal();
   };
 
-  // Handler para remover último developer asignado
   const handleRemoveDeveloper = () => {
     if (selectedDevelopers.length === 0) return;
     setSelectedDevelopers(selectedDevelopers.slice(0, -1));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!projectName.trim()) {
       alert("Por favor, ingresa el nombre del proyecto.");
       return;
@@ -80,13 +68,31 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
       alert("Por favor, selecciona una fecha de entrega.");
       return;
     }
-    onCreate({
-      name: projectName.trim(),
-      description: description.trim(),
-      points,
-      dueDate,
-      developers: selectedDevelopers,
-    });
+
+    setLoading(true);
+
+    try {
+      // Prepara el DTO esperado por el backend
+      const projectData = {
+        name: projectName.trim(),
+        description: description.trim(),
+        deadline: new Date(dueDate), // porque tu DTO requiere Date
+        pointsBudget: points,
+        // Si tu backend admite developers en create, agrégalo aquí y a DTO (no aparece ahora)
+        // developers: selectedDevelopers,
+      };
+
+      const createdProject = await createProject(projectData);
+
+      // Elimina campos innecesarios para onCreate, o pasa el proyecto completo según necesidad
+      onCreate(createdProject);
+
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.error("Error creando proyecto:", error);
+      alert("Error al crear el proyecto. Intenta de nuevo.");
+    }
   };
 
   return (
@@ -102,6 +108,8 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
             Agregar Proyecto
           </h2>
 
+          {/* Formulario ... igual que tienes, omitido por brevedad */}
+
           {/* Nombre del Proyecto */}
           <label htmlFor="project-name" className="block font-semibold mb-1">
             Nombre del Proyecto
@@ -113,6 +121,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
             onChange={(e) => setProjectName(e.target.value)}
             placeholder="Nombre del proyecto"
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
+            disabled={loading}
           />
 
           {/* Descripción */}
@@ -129,6 +138,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
             placeholder="Descripción del proyecto"
             rows={4}
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] resize-y focus:outline-none focus:border-green-500"
+            disabled={loading}
           />
 
           {/* Puntos del Proyecto */}
@@ -143,6 +153,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
             value={points}
             onChange={(e) => setPoints(Number(e.target.value))}
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
+            disabled={loading}
           />
 
           {/* Fecha de Entrega */}
@@ -158,17 +169,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
-          />
-
-          {/* Desarrolladores */}
-          <div className="mb-6 font-semibold text-lg text-gray-400">
-            Desarrolladores
-          </div>
-          <ProjectAvatars
-            developers={selectedDevelopers}
-            onAdd={openAddDevModal} // Abrir modal AddDevModal
-            onRemove={handleRemoveDeveloper}
-            showButtons={true}
+            disabled={loading}
           />
 
           {/* Botones */}
@@ -176,14 +177,16 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({
             <button
               type="button"
               onClick={handleCreate}
-              className="px-5 py-2 rounded-md border border-green-400 bg-green-400/30 font-semibold cursor-pointer text-green-400 hover:bg-green-400/60 transition"
+              className="px-5 py-2 rounded-md border border-green-400 bg-green-400/30 font-semibold cursor-pointer text-green-400 hover:bg-green-400/60 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
             >
-              Crear Proyecto
+              {loading ? "Creando..." : "Crear Proyecto"}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="px-5 py-2 rounded-md border border-white/30 bg-white/10 font-semibold cursor-pointer text-[#e0e0e0] hover:bg-white/20 transition"
+              disabled={loading}
             >
               Salir
             </button>

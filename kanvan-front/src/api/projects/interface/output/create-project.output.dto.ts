@@ -11,19 +11,19 @@ export enum RiskScope {
   CRITICAL,
 }
 
-export interface UserBriefDto {
+export interface UserDto {
   id: string;
   name: string;
   email: string;
 }
 
-export interface TaskBriefDto {
+export interface TaskDto {
   id: string;
   title: string;
   status: TaskStatus;
   points: number;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RiskDto {
@@ -48,8 +48,8 @@ export default interface CreateProjectOutputDto {
   normalBugs?: number;
   lowBugs?: number;
   testsCoberage?: number;
-  owner: UserBriefDto;
-  developers: UserBriefDto[];
-  tasks: TaskBriefDto[];
+  owner: UserDto;
+  developers: UserDto[];
+  tasks: TaskDto[];
   risks: RiskDto[];
 }

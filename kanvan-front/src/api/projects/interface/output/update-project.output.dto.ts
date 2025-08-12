@@ -17,13 +17,13 @@ export enum ProjectStatus {
   COMPLETED,
 }
 
-export interface UserBriefDto {
+export interface UserDto {
   id: string;
   name: string;
   email: string;
 }
 
-export interface TaskBriefDto {
+export interface TaskDto {
   id: string;
   title: string;
   status: TaskStatus;
@@ -55,8 +55,8 @@ export default interface UpdateProjectOutputDto {
   normalBugs?: number;
   lowBugs?: number;
   testsCoberage?: number;
-  owner: UserBriefDto;
-  developers: UserBriefDto[];
-  tasks: TaskBriefDto[];
+  owner: UserDto;
+  developers: UserDto[];
+  tasks: TaskDto[];
   risks: RiskDto[];
 }

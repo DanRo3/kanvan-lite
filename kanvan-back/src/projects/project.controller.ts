@@ -43,9 +43,9 @@ export class ProjectsController {
     return this.projectsService.findAll(user);
   }
 
-  @Get('public/:publicId')
-  findByPublicId(@Param('publicId') publicId: string) {
-    return this.projectsService.findByPublicId(publicId);
+  @Get(':id')
+  findById(@Param('id') id: string) {
+    return this.projectsService.findById(id);
   }
 
   @Patch(':id')

@@ -6,13 +6,13 @@ export type TaskStatus =
   | "DEPLOYED"
   | string;
 
-export interface UserBriefDto {
+export interface UserDto {
   id: string;
   name: string;
   email: string;
 }
 
-export interface ProjectBriefDto {
+export interface ProjectDto {
   id: string;
   publicId?: string;
   name: string;
@@ -39,6 +39,6 @@ export default interface UpdateTaskStatusOutputDto {
   createdAt: string;
   updatedAt: string;
   projectId: string;
-  developers: UserBriefDto[];
-  project?: ProjectBriefDto;
+  developers: UserDto[];
+  project?: ProjectDto;
 }

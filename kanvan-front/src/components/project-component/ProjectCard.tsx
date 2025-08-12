@@ -1,20 +1,20 @@
 import React from "react";
 
-type Status = "green" | "yellow" | "red";
+type Status = "Completado" | "En_Progreso" | "Planeado";
 
 interface ProjectCardProps {
   name: string;
   status: Status;
   pointsDone: number;
   pointsTotal: number;
-  dueDate: string | Date;
+  dueDate: string | Date | null | undefined;
   href: string;
 }
 
 const statusColors: Record<Status, string> = {
-  green: "bg-green-400 text-gray-800 shadow-md",
-  yellow: "bg-yellow-400 text-gray-800 shadow-md",
-  red: "bg-red-400 text-gray-800 shadow-md",
+  Completado: "bg-green-400 text-gray-800 shadow-md",
+  En_Progreso: "bg-yellow-400 text-gray-800 shadow-md",
+  Planeado: "bg-red-400 text-gray-800 shadow-md",
 };
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -25,8 +25,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   dueDate,
   href,
 }) => {
+  console.log(`La url es ${href}`);
   const statusStyle = statusColors[status];
-  const dueDateObj = typeof dueDate === "string" ? new Date(dueDate) : dueDate;
+
+  const dueDateObj =
+    dueDate && typeof dueDate === "string" ? new Date(dueDate) : dueDate;
+
+  const isValidDate =
+    dueDateObj instanceof Date && !isNaN(dueDateObj.getTime());
 
   return (
     <a
@@ -46,7 +52,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         {pointsDone} / {pointsTotal} puntos realizados
       </div>
       <div className="text-sm text-gray-400">
-        Fecha de entrega: {dueDateObj.toLocaleDateString()}
+        Fecha de entrega:{" "}
+        {isValidDate ? dueDateObj!.toLocaleDateString() : "Sin fecha definida"}
       </div>
     </a>
   );

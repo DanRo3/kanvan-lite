@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
@@ -10,6 +11,9 @@ import EditDetailTaskModal from "@/components/modals/EditDetailsTask";
 import AddDevModal from "@/components/modals/AddDevModal";
 import AddRiskModal from "@/components/modals/AddRiskModal";
 import AddTaskModal from "@/components/modals/AddTaskModal";
+
+import { getProjectById } from "@/api/projects/service/project.service";
+import CreateProjectOutputDto from "@/api/projects/interface/output/create-project.output.dto";
 
 interface Developer {
   id: string;
@@ -36,67 +40,31 @@ export default function Page() {
   const params = useParams();
   const { id } = params;
 
-  const [projectName, setProjectName] = useState("Proyecto " + (id ?? ""));
-  const [dueDate, setDueDate] = useState("2025-09-01");
-  const [pointsDone, setPointsDone] = useState(12);
-  const [pointsTotal, setPointsTotal] = useState(20);
-  const [description, setDescription] = useState(
-    `Esta es la descripción completa y editable para el proyecto ${
-      id ?? ""
-    }.\nLorem ipsum dolor sit amet, consectetur adipiscing elit...`
+  // Estados base, se llenarán tras cargar la info desde backend
+  const [projectData, setProjectData] = useState<CreateProjectOutputDto | null>(
+    null
   );
-  const [developers, setDevelopers] = useState<Developer[]>([
-    { id: "1", email: "ana@example.com", photoUrl: null },
-    {
-      id: "2",
-      email: "jose@example.com",
-      photoUrl: "https://randomuser.me/api/portraits/men/31.jpg",
-    },
-    { id: "3", email: "luisa@example.com", photoUrl: null },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [risks] = useState<Risk[]>([
-    { descripcion: "Retraso en proveedores", impacto: "alto" },
-    { descripcion: "Falta de recursos humanos", impacto: "medio" },
-    { descripcion: "Pruebas insuficientes", impacto: "bajo" },
-  ]);
+  // Estados derivados para UI editable
+  const [projectName, setProjectName] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [pointsDone, setPointsDone] = useState(0);
+  const [pointsTotal, setPointsTotal] = useState(0);
+  const [description, setDescription] = useState("");
+  const [developers, setDevelopers] = useState<Developer[]>([]);
+  const [risks, setRisks] = useState<Risk[]>([]);
 
-  // Estado para controlar apertura modal
-  const [isAddRiskModalOpen, setIsAddRiskModalOpen] = useState(false);
-
-  // Simula alcances desde BD o tu API
-  const alcancesDesdeBD = ["Alcance 1", "Alcance 2", "Alcance 3"];
-
-  // Abrir modal
-  const openAddRiskModal = () => setIsAddRiskModalOpen(true);
-  // Cerrar modal
-  const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
-
-  const handleAddRisk = (descripcion: string, alcance: string) => {
-    // Puedes asignar impacto según alcance, aquí un ejemplo simple:
-    let impacto: "bajo" | "medio" | "alto" = "bajo";
-    if (alcance.toLowerCase().includes("alto")) impacto = "alto";
-    else if (alcance.toLowerCase().includes("medio")) impacto = "medio";
-
-    setRisks((prev) => [
-      ...prev,
-      {
-        descripcion: descripcion,
-        impacto: impacto,
-      },
-    ]);
-    closeAddRiskModal();
-  };
-
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-
-  const openAddTaskModal = () => setIsAddTaskModalOpen(true);
-  const closeAddTaskModal = () => setIsAddTaskModalOpen(false);
-
-  // Estado editable local para status
+  // Estados modales, tareas y status
   const [status, setStatus] = useState<"green" | "yellow" | "red">("green");
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isAddRiskModalOpen, setIsAddRiskModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
-  // Simula carga de estados desde BD (puedes remplazar con llamada API)
+  const alcancesDesdeBD = ["Alcance 1", "Alcance 2", "Alcance 3"];
   const estadosDesdeBD: { value: "green" | "yellow" | "red"; label: string }[] =
     [
       { value: "green", label: "Green" },
@@ -104,63 +72,116 @@ export default function Page() {
       { value: "red", label: "Red" },
     ];
 
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "t1",
-      name: "Diseñar interfaz de usuario",
-      status: "red",
-      developers: developers.slice(0, 1),
-      href: "#",
-      points: 5,
-      developmentHours: 10,
-    },
-    {
-      id: "t2",
-      name: "Implementar autenticación",
-      status: "yellow",
-      developers: developers.slice(0, 2),
-      href: "#",
-      points: 8,
-      developmentHours: 15,
-    },
-    {
-      id: "t3",
-      name: "Revisar pruebas unitarias",
-      status: "green",
-      developers: developers.slice(1, 3),
-      href: "#",
-      points: 12,
-      developmentHours: 20,
-    },
-    {
-      id: "t4",
-      name: "Desplegar a producción",
-      status: "green",
-      developers: developers.slice(0, 3),
-      href: "#",
-      points: 7,
-      developmentHours: 14,
-    },
-    {
-      id: "t5",
-      name: "Test de carga",
-      status: "yellow",
-      developers: [developers[1]],
-      href: "#",
-      points: 6,
-      developmentHours: 11,
-    },
-  ]);
+  // Cargar proyecto desde API al montar el componente
+  useEffect(() => {
+    if (!id) {
+      setError("No se especificó el ID del proyecto");
+      setLoading(false);
+      return;
+    }
 
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
+    const projectId = Array.isArray(id) ? id[0] : id;
+    console.log(`EL ID DEL PROYECTO ES ${projectId}`);
 
-  const allUsers: User[] = [
-    { id: "100", email: "marta@example.com" },
-    { id: "101", email: "carlos@example.com" },
-    { id: "102", email: "sofia@example.com" },
-    { id: "103", email: "pedro@example.com" },
-  ];
+    const fetchProject = async () => {
+      try {
+        setLoading(true);
+        const data = await getProjectById(projectId);
+        setProjectData(data);
+
+        // Inicializar estados editables con datos recibidos
+        setProjectName(data.name);
+        setDueDate(
+          data.deadline
+            ? new Date(data.deadline).toISOString().slice(0, 10)
+            : ""
+        ); // yyyy-MM-dd
+        setPointsDone(data.pointsUsed ?? 0);
+        setPointsTotal(data.pointsBudget ?? 0);
+        setDescription(data.description ?? "");
+        setDevelopers(
+          data.developers.map((dev) => ({
+            id: dev.id,
+            email: dev.email,
+            photoUrl: null,
+          }))
+        );
+        setRisks(
+          data.risks.map((r) => ({
+            descripcion: r.name ?? "",
+            impacto:
+              r.scope === 2 /* CRITICAL*/
+                ? "alto"
+                : r.scope === 1 /* NORMAL */
+                ? "medio"
+                : "bajo",
+          }))
+        );
+
+        // Mapear estado del proyecto a color Status básico (puedes ajustar)
+        setStatus(
+          data.status === "COMPLETED"
+            ? "green"
+            : data.status === "IN_PROGRESS"
+            ? "yellow"
+            : "red"
+        );
+
+        // Mapear tareas (adapta si el esquema no coincide)
+        setTasks(
+          data.tasks.map((t) => ({
+            id: t.id,
+            name: t.title,
+            status:
+              t.status === 2 /* COMPLETED */
+                ? "green"
+                : t.status === 1 /* IN_PROGRESS */
+                ? "yellow"
+                : "red",
+            developers: developers.slice(0, 1), // o mapea los devs reales si tienes info
+            href: "#",
+            points: t.points,
+            developmentHours: 0, // asigna según datos si tienes
+          }))
+        );
+
+        setLoading(false);
+      } catch (e) {
+        console.error("Error cargando proyecto:", e);
+        setError("Error al cargar el proyecto");
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]); // id como dependencia
+
+  // Funciones modales y handlers similares a los tuyos
+
+  const openAddRiskModal = () => setIsAddRiskModalOpen(true);
+  const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
+
+  const handleAddRisk = (descripcion: string, alcance: string) => {
+    let impacto: "bajo" | "medio" | "alto" = "bajo";
+    if (alcance.toLowerCase().includes("alto")) impacto = "alto";
+    else if (alcance.toLowerCase().includes("medio")) impacto = "medio";
+
+    setRisks((prev) => [
+      ...prev,
+      {
+        descripcion,
+        impacto,
+      },
+    ]);
+    closeAddRiskModal();
+  };
+
+  const openAddTaskModal = () => setIsAddTaskModalOpen(true);
+  const closeAddTaskModal = () => setIsAddTaskModalOpen(false);
+
+  const openAddDevModal = () => setIsAddDevModalOpen(true);
+  const closeAddDevModal = () => setIsAddDevModalOpen(false);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -187,6 +208,7 @@ export default function Page() {
       developers: [...selectedTask.developers, newDev],
     });
   };
+
   const removeDeveloperFromSelectedTask = () => {
     if (!selectedTask) return;
     setSelectedTask({
@@ -197,9 +219,6 @@ export default function Page() {
       ),
     });
   };
-
-  const openAddDevModal = () => setIsAddDevModalOpen(true);
-  const closeAddDevModal = () => setIsAddDevModalOpen(false);
 
   const handleAddUserToProject = (user: User) => {
     if (developers.find((d) => d.id === user.id)) {
@@ -233,28 +252,27 @@ export default function Page() {
     red: "#f87171",
   };
 
-  // Cuando guardes, puedes actualizar el estado global
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatus(e.target.value as "green" | "yellow" | "red");
   };
 
+  if (loading) return <p className="p-6 text-center">Cargando proyecto...</p>;
+  if (error) return <p className="p-6 text-center text-red-600">{error}</p>;
+  if (!projectData)
+    return <p className="p-6 text-center">No se encontró el proyecto.</p>;
+
   return (
     <>
       <main
-        className={`
-          p-10 min-h-screen relative font-sans
-          bg-[#121212] text-[#e0e0e0]
-          ${
-            selectedTask || isAddDevModalOpen
-              ? "filter blur-sm brightness-90 pointer-events-none select-none"
-              : ""
-          }
-        `}
+        className={`p-10 min-h-screen relative font-sans bg-[#121212] text-[#e0e0e0] ${
+          selectedTask || isAddDevModalOpen
+            ? "filter blur-sm brightness-90 pointer-events-none select-none"
+            : ""
+        }`}
         style={{
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         }}
       >
-        {/* Estado editable con select */}
         <div
           title={`Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`}
           className="absolute top-5 right-5 min-w-[100px] h-12 px-3 rounded-lg shadow-md flex items-center justify-center font-bold text-sm text-[#121212]"
@@ -278,7 +296,6 @@ export default function Page() {
           </select>
         </div>
 
-        {/* Nombre editable */}
         <input
           type="text"
           value={projectName}
@@ -287,7 +304,6 @@ export default function Page() {
           className="text-4xl font-extrabold mb-3 w-full bg-transparent border-none outline-none cursor-text text-green-400 font-sans"
         />
 
-        {/* Fecha y puntos */}
         <div className="flex flex-wrap gap-12 mb-3 text-gray-400 font-semibold text-lg items-start">
           <div className="flex flex-col gap-1.5 w-44">
             <input
@@ -300,7 +316,6 @@ export default function Page() {
             <span>Quedan {daysRemaining} días para finalizar</span>
           </div>
 
-          {/* Puntos */}
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-center gap-1">
               <span>Puntos obtenidos</span>
@@ -346,7 +361,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Desarrolladores */}
         <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
           Desarrolladores
         </div>
@@ -357,7 +371,6 @@ export default function Page() {
           onRemove={() => alert("Borrado")}
         />
 
-        {/* Descripción */}
         <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
           Descripción del Proyecto
         </div>
@@ -369,7 +382,6 @@ export default function Page() {
           className="mt-2 w-full bg-white/5 border border-green-400 rounded-xl text-[#e0e0e0] text-base p-3 font-sans resize-y min-h-[150px] outline-none"
         />
 
-        {/* Botón nueva tarea */}
         <div className="flex justify-start mt-6 mb-3">
           <button
             type="button"
@@ -381,20 +393,16 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Panel tareas */}
         <TasksProjectComponent tasks={tasks} onTaskClick={handleTaskClick} />
 
-        {/* Panel riesgos */}
         <RiskCard
           risks={risks}
           showAddButton={true}
           onAddRisk={openAddRiskModal}
         />
 
-        {/* Panel métricas calidad */}
         <QualityCard editable={true} />
 
-        {/* Botones guardar y salir */}
         <div className="flex gap-3 mt-6 justify-end">
           <button
             type="button"
@@ -413,7 +421,6 @@ export default function Page() {
         </div>
       </main>
 
-      {/* Modal detalle tarea */}
       {selectedTask && (
         <EditDetailTaskModal
           taskName={selectedTask.name}
@@ -438,7 +445,7 @@ export default function Page() {
 
       {isAddTaskModalOpen && (
         <AddTaskModal
-          developers={developers} // desarrolladores disponibles en el proyecto
+          developers={developers}
           onCreate={(newTask) => {
             setTasks((prev) => [
               ...prev,
@@ -455,7 +462,6 @@ export default function Page() {
         />
       )}
 
-      {/* Modal agregar devs */}
       {isAddDevModalOpen && (
         <AddDevModal
           users={allUsers}

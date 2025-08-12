@@ -167,6 +167,67 @@ export class ProjectsService {
     return project;
   }
 
+  async findById(id: string) {
+    const project = await this.prisma.project.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        publicId: true,
+        name: true,
+        description: true,
+        status: true,
+        pointsBudget: true,
+        pointsUsed: true,
+        deadline: true,
+        createdAt: true,
+        updatedAt: true,
+        criticalBugs: true,
+        normalBugs: true,
+        lowBugs: true,
+        testsCoberage: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        developers: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        tasks: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            points: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        risks: {
+          select: {
+            id: true,
+            name: true,
+            scope: true,
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return project;
+  }
+
   async checkUserAccess(projectId: string, user): Promise<boolean> {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
