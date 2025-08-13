@@ -82,6 +82,9 @@ export default function Page() {
   const params = useParams();
   const { id } = params;
 
+  // Calculamos projectId estable
+  const projectId = Array.isArray(id) ? id[0] : id;
+
   const [projectData, setProjectData] = useState<CreateProjectOutputDto | null>(
     null
   );
@@ -105,19 +108,19 @@ export default function Page() {
 
   const scopesList: RiskScope[] = ["LOW", "NORMAL", "CRITICAL"];
 
+  // Load project and tasks once
   useEffect(() => {
-    if (!id) {
+    if (!projectId) {
       setError("No se especificó el ID del proyecto");
       setLoading(false);
       return;
     }
 
-    const projectId = Array.isArray(id) ? id[0] : id;
-
     const fetchProject = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-
+        // Datos proyecto
         const data = await getProjectById(projectId);
         setProjectData(data);
 
@@ -150,36 +153,78 @@ export default function Page() {
         );
         setStatus(statusMapping?.color ?? "red");
 
-        // Aquí llamamos al endpoint que trae solo las tareas de este proyecto
-        const tasksFromProject = await getTasksByProjectId(projectId);
+        // Tareas del proyecto
+        await reloadTasks();
 
-        const mappedTasks: Task[] = tasksFromProject.map((t) => ({
-          id: t.id,
-          name: t.title,
-          status: mapTaskStatus(t.status),
-          developers:
-            t.developers?.map((d) => ({
-              id: d.id,
-              email: d.email,
-              photoUrl: null,
-            })) ?? [],
-          href: "#",
-          points: t.points,
-          developmentHours: t.developmentHours ?? 0,
-        }));
-
-        setTasks(mappedTasks);
         setLoading(false);
       } catch (e) {
-        console.error("Error cargando proyecto:", e);
         setError("Error al cargar el proyecto");
         setLoading(false);
+        console.error("Error cargando proyecto:", e);
       }
     };
 
     fetchProject();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [projectId]); // Solo al montar o cambiar projectId
+
+  // Función para recargar las tareas desde backend y actualizar estado
+  const reloadTasks = async () => {
+    if (!projectId) return;
+    try {
+      const loaded = await getTasksByProjectId(projectId);
+      const mappedTasks: Task[] = loaded.map((t) => ({
+        id: t.id,
+        name: t.title,
+        status: mapTaskStatus(t.status),
+        developers:
+          t.developers?.map((d) => ({
+            id: d.id,
+            email: d.email,
+            photoUrl: null,
+          })) ?? [],
+        href: "#",
+        points: t.points,
+        developmentHours: t.developmentHours ?? 0,
+      }));
+      setTasks(mappedTasks);
+    } catch (error) {
+      console.error("Error recargando tareas:", error);
+    }
+  };
+
+  // Crear tarea y luego recargar lista completa
+  const handleCreateTask = async (newTaskData: {
+    name: string;
+    points: number;
+    developmentHours: number;
+    developers: Developer[];
+  }) => {
+    if (!projectData) {
+      alert("Proyecto no cargado.");
+      return;
+    }
+
+    try {
+      const createTaskDto = {
+        title: newTaskData.name,
+        points: newTaskData.points,
+        developmentHours: newTaskData.developmentHours,
+        projectId: projectData.id,
+      };
+
+      await createTask(createTaskDto);
+
+      // Recarga lista actualizada de tareas
+      await reloadTasks();
+
+      closeAddTaskModal();
+    } catch (error) {
+      console.error("Error creando tarea:", error);
+      alert("Error al crear la tarea. Intenta nuevamente.");
+    }
+  };
+
+  // Otros manejadores modales y estados
 
   const openAddRiskModal = () => setIsAddRiskModalOpen(true);
   const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
@@ -318,49 +363,6 @@ export default function Page() {
     setStatus(statusMapping?.color ?? "red");
   };
 
-  const handleCreateTask = async (newTaskData: {
-    name: string;
-    points: number;
-    developmentHours: number;
-    developers: Developer[];
-  }) => {
-    if (!projectData) {
-      alert("Proyecto no cargado.");
-      return;
-    }
-
-    try {
-      const createTaskDto = {
-        title: newTaskData.name,
-        points: newTaskData.points,
-        developmentHours: newTaskData.developmentHours,
-        projectId: projectData.id,
-      };
-
-      const createdTask = await createTask(createTaskDto);
-
-      // Construye la tarea con la respuesta y datos locales
-      const taskToAdd: Task = {
-        id: createdTask.id,
-        name: createdTask.title,
-        status: "PENDING",
-        developers: newTaskData.developers,
-        href: "#",
-        points: createdTask.points,
-        developmentHours: createdTask.developmentHours ?? 0,
-      };
-
-      // Actualiza el estado local para que React re-renderice
-      setTasks((prev) => [...prev, taskToAdd]);
-
-      // Cierra el modal tras crear
-      closeAddTaskModal();
-    } catch (error) {
-      console.error("Error creando tarea:", error);
-      alert("Error al crear la tarea. Intenta nuevamente.");
-    }
-  };
-
   if (loading) return <p className="p-6 text-center">Cargando proyecto...</p>;
   if (error) return <p className="p-6 text-center text-red-600">{error}</p>;
   if (!projectData)
@@ -378,6 +380,7 @@ export default function Page() {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         }}
       >
+        {/* Estado y selección de proyecto */}
         <div
           title={`Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`}
           className="absolute top-5 right-5 min-w-[100px] h-12 px-3 rounded-lg shadow-md flex items-center justify-center font-bold text-sm text-[#121212]"
@@ -401,6 +404,7 @@ export default function Page() {
           </select>
         </div>
 
+        {/* Nombre editable */}
         <input
           type="text"
           value={projectName}
@@ -409,6 +413,7 @@ export default function Page() {
           className="text-4xl font-extrabold mb-3 w-full bg-transparent border-none outline-none cursor-text text-green-400 font-sans"
         />
 
+        {/* Fecha, puntos y descripción */}
         <div className="flex flex-wrap gap-12 mb-3 text-gray-400 font-semibold text-lg items-start">
           <div className="flex flex-col gap-1.5 w-44">
             <input

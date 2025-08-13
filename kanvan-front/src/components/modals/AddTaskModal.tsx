@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import ProjectAvatars, {
   Developer,
@@ -11,7 +12,7 @@ interface User {
 }
 
 interface AddTaskModalProps {
-  developers: Developer[]; // usuarios disponibles para asignar (todos los usuarios que podrían agregarse)
+  developers: Developer[]; // usuarios disponibles para asignar
   onCreate: (task: {
     name: string;
     points: number;
@@ -30,19 +31,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [points, setPoints] = useState(0);
   const [developmentHours, setDevelopmentHours] = useState(0);
 
-  // Estado local para desarrolladores asignados a esta nueva tarea
+  // Desarrolladores asignados a la nueva tarea
   const [selectedDevelopers, setSelectedDevelopers] = useState<Developer[]>([]);
 
-  // Estado para controlar modal agregar devs
+  // Estado para el modal de agregar devs
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
-  // Abrir modal AddDevModal
   const openAddDevModal = () => setIsAddDevModalOpen(true);
-
-  // Cerrar modal AddDevModal
   const closeAddDevModal = () => setIsAddDevModalOpen(false);
 
-  // Al agregar usuario desde AddDevModal, actualizar selectedDevelopers si no está duplicado
   const handleAddUserToSelected = (user: User) => {
     if (selectedDevelopers.find((d) => d.id === user.id)) {
       alert("El desarrollador ya está agregado a la tarea.");
@@ -55,7 +52,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
     closeAddDevModal();
   };
 
-  // Handler para remover último developer asignado
   const handleRemoveDeveloper = () => {
     if (selectedDevelopers.length === 0) return;
     setSelectedDevelopers(selectedDevelopers.slice(0, -1));
@@ -95,7 +91,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             Agregar Tarea
           </h2>
 
-          {/* Campo Tarea */}
           <label htmlFor="task-name" className="block font-semibold mb-1">
             Tarea
           </label>
@@ -108,35 +103,32 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
           />
 
-          {/* Puntos con spinner */}
           <label htmlFor="points" className="block font-semibold mb-1">
             Puntos
           </label>
           <input
             id="points"
             type="number"
-            min={0}
+            min={1}
             step={1}
             value={points}
             onChange={(e) => setPoints(Number(e.target.value))}
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
           />
 
-          {/* Horas de desarrollo con spinner */}
           <label htmlFor="dev-hours" className="block font-semibold mb-1">
             Horas de desarrollo
           </label>
           <input
             id="dev-hours"
             type="number"
-            min={0}
+            min={1}
             step={1}
             value={developmentHours}
             onChange={(e) => setDevelopmentHours(Number(e.target.value))}
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
           />
 
-          {/* Botones */}
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
