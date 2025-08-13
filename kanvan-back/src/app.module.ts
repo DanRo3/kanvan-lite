@@ -5,7 +5,8 @@ import { ProjectsModule } from './projects/project.module';
 import { TasksModule } from './tasks/task.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RiskModule } from './risks/risk.module';
-import { UserModule } from './modules/user/user.module';
+import { UserModule as SeederModule } from './modules/user/user.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserModule } from './modules/user/user.module';
     TasksModule,
     RiskModule,
     UserModule,
+    SeederModule,
   ],
 })
 export class AppModule {}

@@ -259,7 +259,6 @@ export class ProjectsService {
   }
 
   async update(projectId: string, updateProjectDto: UpdateProjectDto, user) {
-    // Verificar que el proyecto existe
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
     });
@@ -267,20 +266,27 @@ export class ProjectsService {
       throw new NotFoundException('Project not found');
     }
 
-    // Validar permisos del usuario: solo Owner puede actualizar su proyecto
     if (user.role !== UserRole.OWNER || project.ownerId !== user.userId) {
       throw new ForbiddenException(
         'You do not have permission to update this project',
       );
     }
 
-    // Actualiza el proyecto, si viene deadline lo convierte a Date
-    const dataToUpdate = {
-      ...updateProjectDto,
-      ...(updateProjectDto.deadline
-        ? { deadline: new Date(updateProjectDto.deadline) }
-        : {}),
+    // Extraer developersIds del DTO y eliminar para no pasar dos veces
+    const { developersIds, ...restData } = updateProjectDto;
+
+    // Preparar el objeto data para update
+    const dataToUpdate: any = {
+      ...restData,
+      ...(restData.deadline ? { deadline: new Date(restData.deadline) } : {}),
     };
+
+    // Si vienen developersIds, conectar esos developers
+    if (developersIds && developersIds.length > 0) {
+      dataToUpdate.developers = {
+        connect: developersIds.map((id) => ({ id })),
+      };
+    }
 
     return this.prisma.project.update({
       where: { id: projectId },

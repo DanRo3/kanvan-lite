@@ -136,18 +136,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             className="mb-5 w-full rounded-md border border-green-400 bg-[#222] px-3 py-2 text-[#e0e0e0] focus:outline-none focus:border-green-500"
           />
 
-          {/* Desarrolladores con ProjectAvatars */}
-          <div className="mb-6 font-semibold text-lg text-gray-400">
-            Desarrolladores
-          </div>
-
-          <ProjectAvatars
-            developers={selectedDevelopers}
-            onAdd={openAddDevModal} // Aquí abrimos el modal al hacer clic en +
-            onRemove={handleRemoveDeveloper}
-            showButtons={true}
-          />
-
           {/* Botones */}
           <div className="flex justify-end gap-3 mt-6">
             <button

@@ -7,7 +7,7 @@ interface Developer {
   photoUrl?: string | null;
 }
 
-type Status = "green" | "yellow" | "red";
+type Status = "DEPLOYED" | "COMPLETED" | "PENDING" | "IN_PROGRESS";
 
 interface EditDetailTaskModalProps {
   taskName: string;
@@ -22,15 +22,17 @@ interface EditDetailTaskModalProps {
     points: number;
     developmentHours: number;
     status: Status;
+    developerIds: string[];
   }) => void;
   onClose: () => void;
   editable?: boolean; // Opcional para controlar edición general
 }
 
 const statusColors: Record<Status, string> = {
-  green: "bg-green-400 text-gray-900",
-  yellow: "bg-yellow-400 text-gray-900",
-  red: "bg-red-400 text-gray-900",
+  DEPLOYED: "bg-green-400 text-gray-900",
+  COMPLETED: "bg-yellow-400 text-gray-900",
+  IN_PROGRESS: "bg-orange-700 text-gray-900",
+  PENDING: "bg-red-400 text-gray-900",
 };
 
 const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
@@ -66,7 +68,15 @@ const EditDetailTaskModal: React.FC<EditDetailTaskModalProps> = ({
   }, [initialStatus]);
 
   const handleSave = () => {
-    onSave({ taskName, points, developmentHours, status: editableStatus });
+    const developerIds = developers.map((dev) => dev.id);
+
+    onSave({
+      taskName,
+      points,
+      developmentHours,
+      status: editableStatus,
+      developerIds, // Aquí envías los IDs actuales de developers para ser guardados
+    });
   };
 
   return (

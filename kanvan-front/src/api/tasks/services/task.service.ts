@@ -6,11 +6,24 @@ import CreateTaskOutputDto from "../interface/output/create-task.output.dto";
 import UpdateTaskOutputDto from "../interface/output/update-task.output.dto";
 import UpdateTaskStatusOutputDto from "../interface/output/update-task-status.output.dto";
 
-const BASE_PATH = "/tasks";
+const BASE_PATH = "/api/tasks";
 
 export const getAllTasks = async (): Promise<CreateTaskOutputDto[]> => {
   try {
     const response = await api.get<CreateTaskOutputDto[]>(BASE_PATH);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getTasksByProjectId = async (
+  projectId: string
+): Promise<CreateTaskOutputDto[]> => {
+  try {
+    const response = await api.get<CreateTaskOutputDto[]>(
+      `${BASE_PATH}/project/${projectId}`
+    );
     return response.data;
   } catch (error) {
     throw error;

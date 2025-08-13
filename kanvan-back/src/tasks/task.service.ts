@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { CreateTaskDto } from './dto/create-task.dto';
 import type { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import type { UpdateTaskDto } from './dto/update-task.dto';
-import { type User, TaskStatus } from '@prisma/client';
+import { type User, Prisma, TaskStatus } from '@prisma/client';
 import { ProjectsService } from '../projects/project.service';
 
 @Injectable()
@@ -50,14 +50,13 @@ export class TasksService {
   async updateTask(id: string, updateTaskDto: UpdateTaskDto, user: User) {
     const task = await this.prisma.task.findUnique({
       where: { id },
-      include: { project: true },
+      include: { project: true, developers: true },
     });
 
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
-    // Verificar acceso
     const hasAccess = await this.projectsService.checkUserAccess(
       task.projectId,
       user,
@@ -67,14 +66,25 @@ export class TasksService {
       throw new ForbiddenException('Access denied to this project');
     }
 
+    let developersUpdate: Prisma.TaskUpdateInput['developers'] | undefined =
+      undefined;
+    if (updateTaskDto.developerIds) {
+      developersUpdate = {
+        set: updateTaskDto.developerIds.map((id) => ({ id })),
+      };
+    }
+
+    const dataUpdate = {
+      title: updateTaskDto.title,
+      points: updateTaskDto.points,
+      developmentHours: updateTaskDto.developmentHours,
+      status: updateTaskDto.status,
+      ...(developersUpdate ? { developers: developersUpdate } : {}),
+    };
+
     return this.prisma.task.update({
       where: { id },
-      data: {
-        title: updateTaskDto.title,
-        points: updateTaskDto.points,
-        developmentHours: updateTaskDto.developmentHours,
-        status: updateTaskDto.status,
-      },
+      data: dataUpdate,
       include: {
         project: true,
         developers: {

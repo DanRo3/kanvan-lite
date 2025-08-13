@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
 import {
   IsString,
@@ -72,4 +72,10 @@ export class UpdateProjectDto extends PartialType(CreateProjectDto) {
   @IsOptional()
   @ApiProperty({ required: false, nullable: true })
   testsCoberage?: number;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'IDs of developers to add',
+  })
+  developersIds?: string[];
 }

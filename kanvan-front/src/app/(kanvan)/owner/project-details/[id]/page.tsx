@@ -20,6 +20,12 @@ import { createRisk, deleteRisk } from "@/api/risks/services/risk.service";
 import CreateRiskInputDto from "@/api/risks/interface/input/create-risk.input.dto";
 import { RiskScope } from "@/api/risks/enums/risk-scope.enum";
 
+import {
+  createTask,
+  getTasksByProjectId,
+} from "@/api/tasks/services/task.service";
+import { ProjectStatus } from "@/api/projects/interface/input/update-project.input.dto";
+
 interface Developer {
   id: string;
   email: string;
@@ -34,25 +40,54 @@ interface User {
 interface Task {
   id: string;
   name: string;
-  status: "red" | "yellow" | "green";
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DEPLOYED";
   developers: Developer[];
   href: string;
   points: number;
   developmentHours: number;
 }
 
+const projectStatusOptions: {
+  value: ProjectStatus;
+  label: string;
+  color: "green" | "yellow" | "red";
+}[] = [
+  { value: "PLANNED", label: "Planificado", color: "red" },
+  { value: "IN_PROGRESS", label: "En progreso", color: "yellow" },
+  { value: "COMPLETED", label: "Completado", color: "green" },
+];
+
+// Helper para mapear status numérico o string que venga de backend a strings esperados
+const mapTaskStatus = (status: number | string): Task["status"] => {
+  if (typeof status === "string") {
+    const s = status.toUpperCase();
+    if (
+      s === "PENDING" ||
+      s === "IN_PROGRESS" ||
+      s === "COMPLETED" ||
+      s === "DEPLOYED"
+    )
+      return s as Task["status"];
+  }
+  const map: Record<number, Task["status"]> = {
+    0: "PENDING",
+    1: "IN_PROGRESS",
+    2: "COMPLETED",
+    3: "DEPLOYED",
+  };
+  return map[Number(status)] || "PENDING";
+};
+
 export default function Page() {
   const params = useParams();
   const { id } = params;
 
-  // Estados base, se llenarán tras cargar la info desde backend
   const [projectData, setProjectData] = useState<CreateProjectOutputDto | null>(
     null
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados derivados para UI editable
   const [projectName, setProjectName] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [pointsDone, setPointsDone] = useState(0);
@@ -61,7 +96,6 @@ export default function Page() {
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
 
-  // Estados modales, tareas y status
   const [status, setStatus] = useState<"green" | "yellow" | "red">("green");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -70,14 +104,7 @@ export default function Page() {
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
   const scopesList: RiskScope[] = ["LOW", "NORMAL", "CRITICAL"];
-  const estadosDesdeBD: { value: "green" | "yellow" | "red"; label: string }[] =
-    [
-      { value: "green", label: "Green" },
-      { value: "yellow", label: "Yellow" },
-      { value: "red", label: "Red" },
-    ];
 
-  // Cargar proyecto desde API al montar el componente
   useEffect(() => {
     if (!id) {
       setError("No se especificó el ID del proyecto");
@@ -86,73 +113,62 @@ export default function Page() {
     }
 
     const projectId = Array.isArray(id) ? id[0] : id;
-    console.log(`EL ID DEL PROYECTO ES ${projectId}`);
 
     const fetchProject = async () => {
       try {
         setLoading(true);
+
         const data = await getProjectById(projectId);
         setProjectData(data);
 
-        // Inicializar estados editables con datos recibidos
         setProjectName(data.name);
         setDueDate(
           data.deadline
             ? new Date(data.deadline).toISOString().slice(0, 10)
             : ""
-        ); // yyyy-MM-dd
+        );
         setPointsDone(data.pointsUsed ?? 0);
         setPointsTotal(data.pointsBudget ?? 0);
         setDescription(data.description ?? "");
         setDevelopers(
-          data.developers.map((dev) => ({
-            id: dev.id,
-            email: dev.email,
+          data.developers.map((d) => ({
+            id: d.id,
+            email: d.email,
             photoUrl: null,
           }))
         );
         setRisks(
           data.risks.map((r) => ({
-            name: r.name ?? "",
-            scope:
-              typeof r.scope === "string"
-                ? r.scope.toUpperCase() // asegurar mayúsculas si quieres
-                : r.scope === 2
-                ? "CRITICAL"
-                : r.scope === 1
-                ? "NORMAL"
-                : "LOW",
             id: r.id,
+            name: r.name ?? "",
+            scope: typeof r.scope === "string" ? r.scope.toUpperCase() : "LOW",
           }))
         );
 
-        // Mapear estado del proyecto a color Status básico (puedes ajustar)
-        setStatus(
-          data.status === "COMPLETED"
-            ? "green"
-            : data.status === "IN_PROGRESS"
-            ? "yellow"
-            : "red"
+        const statusMapping = projectStatusOptions.find(
+          (s) => s.value === data.status
         );
+        setStatus(statusMapping?.color ?? "red");
 
-        // Mapear tareas (adapta si el esquema no coincide)
-        setTasks(
-          data.tasks.map((t) => ({
-            id: t.id,
-            name: t.title,
-            status:
-              t.status === 2 /* COMPLETED */
-                ? "green"
-                : t.status === 1 /* IN_PROGRESS */
-                ? "yellow"
-                : "red",
-            developers: developers.slice(0, 1), // o mapea los devs reales si tienes info
-            href: "#",
-            points: t.points,
-            developmentHours: 0, // asigna según datos si tienes
-          }))
-        );
+        // Aquí llamamos al endpoint que trae solo las tareas de este proyecto
+        const tasksFromProject = await getTasksByProjectId(projectId);
 
+        const mappedTasks: Task[] = tasksFromProject.map((t) => ({
+          id: t.id,
+          name: t.title,
+          status: mapTaskStatus(t.status),
+          developers:
+            t.developers?.map((d) => ({
+              id: d.id,
+              email: d.email,
+              photoUrl: null,
+            })) ?? [],
+          href: "#",
+          points: t.points,
+          developmentHours: t.developmentHours ?? 0,
+        }));
+
+        setTasks(mappedTasks);
         setLoading(false);
       } catch (e) {
         console.error("Error cargando proyecto:", e);
@@ -163,17 +179,14 @@ export default function Page() {
 
     fetchProject();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]); // id como dependencia
+  }, [id]);
 
-  // Abrir y cerrar modal de agregar riesgo
   const openAddRiskModal = () => setIsAddRiskModalOpen(true);
   const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
 
   const handleAddRisk = async (riskDescription: string, scope: string) => {
     try {
-      // Convertir a enum string esperado
       let scopeEnum: RiskScope;
-
       switch (scope.toUpperCase()) {
         case "CRITICAL":
         case "ALTO":
@@ -190,7 +203,7 @@ export default function Page() {
       const riskData: CreateRiskInputDto = {
         projectId: projectData?.id || "",
         name: riskDescription,
-        scope: scopeEnum, // Ahora cadena "LOW"|"NORMAL"|"CRITICAL"
+        scope: scopeEnum,
       };
 
       const createdRisk = await createRisk(riskData);
@@ -211,7 +224,6 @@ export default function Page() {
     }
   };
 
-  // Función para eliminar riesgo y actualizar estado
   const handleDeleteRisk = async (riskId: string) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este riesgo?")) return;
     try {
@@ -299,7 +311,54 @@ export default function Page() {
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatus(e.target.value as "green" | "yellow" | "red");
+    const value = e.target.value as ProjectStatus;
+    setProjectData((prev) => (prev ? { ...prev, status: value } : prev));
+
+    const statusMapping = projectStatusOptions.find((s) => s.value === value);
+    setStatus(statusMapping?.color ?? "red");
+  };
+
+  const handleCreateTask = async (newTaskData: {
+    name: string;
+    points: number;
+    developmentHours: number;
+    developers: Developer[];
+  }) => {
+    if (!projectData) {
+      alert("Proyecto no cargado.");
+      return;
+    }
+
+    try {
+      const createTaskDto = {
+        title: newTaskData.name,
+        points: newTaskData.points,
+        developmentHours: newTaskData.developmentHours,
+        projectId: projectData.id,
+      };
+
+      const createdTask = await createTask(createTaskDto);
+
+      // Construye la tarea con la respuesta y datos locales
+      const taskToAdd: Task = {
+        id: createdTask.id,
+        name: createdTask.title,
+        status: "PENDING",
+        developers: newTaskData.developers,
+        href: "#",
+        points: createdTask.points,
+        developmentHours: createdTask.developmentHours ?? 0,
+      };
+
+      // Actualiza el estado local para que React re-renderice
+      setTasks((prev) => [...prev, taskToAdd]);
+
+      // Cierra el modal tras crear
+      closeAddTaskModal();
+    } catch (error) {
+      console.error("Error creando tarea:", error);
+      alert("Error al crear la tarea. Intenta nuevamente.");
+    }
   };
 
   if (loading) return <p className="p-6 text-center">Cargando proyecto...</p>;
@@ -329,12 +388,12 @@ export default function Page() {
         >
           <select
             aria-label="Cambiar estado del proyecto"
-            value={status}
+            value={projectData.status}
             onChange={handleStatusChange}
             className="bg-transparent border-none outline-none cursor-pointer font-bold text-sm text-[#121212]"
             style={{ backgroundColor: "transparent" }}
           >
-            {estadosDesdeBD.map(({ value, label }) => (
+            {projectStatusOptions.map(({ value, label }) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -382,7 +441,8 @@ export default function Page() {
               />
             </div>
             <div className="font-bold text-lg text-gray-400 select-none pb-6">
-              /
+              {" "}
+              /{" "}
             </div>
             <div className="flex flex-col items-center gap-1">
               <span>Puntos totales</span>
@@ -439,13 +499,17 @@ export default function Page() {
           </button>
         </div>
 
-        <TasksProjectComponent tasks={tasks} onTaskClick={handleTaskClick} />
+        <TasksProjectComponent
+          tasks={tasks}
+          onTaskClick={handleTaskClick}
+          projectId={id}
+        />
 
         <RiskCard
           risks={risks}
           showAddButton={true}
           onAddRisk={openAddRiskModal}
-          onDeleteRisk={handleDeleteRisk} // Pasamos la función para eliminar
+          onDeleteRisk={handleDeleteRisk}
         />
 
         <QualityCard editable={true} />
@@ -493,25 +557,14 @@ export default function Page() {
       {isAddTaskModalOpen && (
         <AddTaskModal
           developers={developers}
-          onCreate={(newTask) => {
-            setTasks((prev) => [
-              ...prev,
-              {
-                ...newTask,
-                id: `t${prev.length + 1}`,
-                status: "green", // o estado inicial por defecto
-                href: "#",
-              },
-            ]);
-            closeAddTaskModal();
-          }}
+          onCreate={handleCreateTask}
           onClose={closeAddTaskModal}
         />
       )}
 
       {isAddDevModalOpen && (
         <AddDevModal
-          users={allUsers}
+          users={[]} // Aquí puedes pasar todos los usuarios disponibles si tienes la info
           onAddUser={handleAddUserToProject}
           onClose={closeAddDevModal}
         />

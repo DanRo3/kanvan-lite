@@ -1,4 +1,6 @@
 import {
+  ArrayUnique,
+  IsArray,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -7,7 +9,7 @@ import {
   Min,
 } from 'class-validator';
 import { TaskStatus } from '@prisma/client';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateTaskDto {
   @IsString()
@@ -29,4 +31,12 @@ export class UpdateTaskDto {
   @IsEnum(TaskStatus)
   @ApiProperty()
   status: TaskStatus;
+
+  @IsOptional()
+  @IsArray()
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'IDs de developers asignados a la tarea',
+  })
+  developerIds?: string[];
 }
