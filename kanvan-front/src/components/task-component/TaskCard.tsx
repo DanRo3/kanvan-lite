@@ -46,7 +46,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
       href={href}
       className="relative flex flex-col justify-end p-8 pt-8 pb-14 min-h-[120px] max-w-xs rounded-xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_8px_32px_rgba(31,38,135,0.37)] text-gray-300 font-sans no-underline cursor-pointer transition-transform transition-shadow transition-bg duration-250 ease-in-out hover:-translate-y-1.5 hover:shadow-[0_15px_40px_rgba(31,38,135,0.7)] hover:bg-white/15"
     >
-      {/* Botón borrar arriba a la derecha con React Icons */}
       <button
         onClick={handleDeleteClick}
         className="absolute top-2 right-2 flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white transition-colors duration-300"

@@ -71,7 +71,7 @@ export const updateUser = async (
   userData: UpdateUserInputDto
 ): Promise<UpdateUserOutputDto> => {
   try {
-    const response = await api.put<UpdateUserOutputDto>(
+    const response = await api.patch<UpdateUserOutputDto>(
       `${BASE_PATH}/${id}`,
       userData,
       {

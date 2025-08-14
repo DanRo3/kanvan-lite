@@ -57,7 +57,7 @@ export const updateTask = async (
   taskData: UpdateTaskInputDto
 ): Promise<UpdateTaskOutputDto> => {
   try {
-    const response = await api.put<UpdateTaskOutputDto>(
+    const response = await api.patch<UpdateTaskOutputDto>(
       `${BASE_PATH}/${id}`,
       taskData,
       {

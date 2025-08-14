@@ -1,7 +1,7 @@
 export enum ProjectStatus {
-  PLANNED,
-  IN_PROGRESS,
-  COMPLETED,
+  PLANNED = "PLANNED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
 }
 
 export default interface UpdateProjectInputDto {
@@ -9,7 +9,7 @@ export default interface UpdateProjectInputDto {
 
   description?: string;
 
-  deadline?: Date;
+  deadline?: string;
 
   pointsBudget?: number;
 
@@ -23,7 +23,7 @@ export default interface UpdateProjectInputDto {
 
   lowBugs?: number;
 
-  testCoberage?: number;
+  testsCoberage?: number;
 
   developersIds?: string[];
 }

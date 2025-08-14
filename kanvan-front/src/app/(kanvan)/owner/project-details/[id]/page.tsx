@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 
 import Risk from "@/api/risks/interface/input/risk.input.dto";
@@ -30,7 +30,14 @@ import {
 } from "@/api/tasks/services/task.service";
 
 import { ProjectStatus } from "@/api/projects/interface/input/update-project.input.dto";
-import { getAllDevelopers } from "@/api/user/service/user.service";
+import {
+  getAllDevelopers,
+  getDevelopersByProjectId,
+} from "@/api/user/service/user.service";
+
+import UpdateTaskInputDto from "@/api/tasks/interface/input/update-task.input.dto";
+import UpdateTaskOutputDto from "@/api/tasks/interface/output/update-task.output.dto";
+import { updateTask } from "@/api/tasks/services/task.service";
 
 interface Developer {
   id: string;
@@ -55,6 +62,7 @@ interface Task {
 
 // Nuevo: Importar modal para eliminar desarrolladores
 import DeleteDevModal from "@/components/modals/DeleteDevModal";
+import { useDebounce } from "@/hooks/useDebounce.hook";
 
 const projectStatusOptions: {
   value: ProjectStatus;
@@ -104,7 +112,6 @@ export default function Page() {
   const [pointsDone, setPointsDone] = useState(0);
   const [pointsTotal, setPointsTotal] = useState(0);
   const [description, setDescription] = useState("");
-  // Estado para desarrolladores asignados al proyecto
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
 
@@ -115,10 +122,150 @@ export default function Page() {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
-  const scopesList: RiskScope[] = ["LOW", "NORMAL", "CRITICAL"];
+  const debouncedProjectName = useDebounce(projectName, 450);
+  const debouncedDescription = useDebounce(description, 450);
+  const debouncedDueDate = useDebounce(dueDate, 450);
+  const debouncedPointsDone = useDebounce(pointsDone, 450);
+  const debouncedPointsTotal = useDebounce(pointsTotal, 450);
+  const debouncedStatus = useDebounce(projectData?.status || "PLANNED", 450);
 
-  // Estado para todos los desarrolladores del sistema (para modal añadir)
+  const [isDeleteDevModalOpenForProject, setIsDeleteDevModalOpenForProject] =
+    useState(false);
+  const [isDeleteDevModalOpenForTask, setIsDeleteDevModalOpenForTask] =
+    useState(false);
+
+  const scopesList: RiskScope[] = ["LOW", "NORMAL", "CRITICAL"];
   const [allDevelopers, setAllDevelopers] = useState<Developer[]>([]);
+
+  const [allAvailableUsers, setAllAvailableUsers] = useState<User[]>([]);
+
+  const [projectStatusLocal, setProjectStatusLocal] = useState<ProjectStatus>(
+    projectData?.status || "PLANNED"
+  );
+
+  const debouncedProjectStatus = useDebounce(projectStatusLocal, 450);
+
+  const handleProjectStatusChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = e.target.value as ProjectStatus;
+    setProjectStatusLocal(value); // actualiza el estado local que debounceamos
+    const statusMapping = projectStatusOptions.find((s) => s.value === value);
+    setStatus(statusMapping?.color ?? "red");
+  };
+
+  useEffect(() => {
+    if (projectData?.status) {
+      setProjectStatusLocal(projectData.status);
+    }
+  }, [projectData?.status]);
+
+  useEffect(() => {
+    if (!projectId || !projectData) return;
+
+    const safePointsTotal = Number.isFinite(debouncedPointsTotal)
+      ? debouncedPointsTotal
+      : 0;
+    const safePointsDone = Number.isFinite(debouncedPointsDone)
+      ? debouncedPointsDone
+      : 0;
+    const safeCriticalBugs = Number.isFinite(projectData.criticalBugs)
+      ? projectData.criticalBugs
+      : 0;
+    const safeNormalBugs = Number.isFinite(projectData.normalBugs)
+      ? projectData.normalBugs
+      : 0;
+    const safeLowBugs = Number.isFinite(projectData.lowBugs)
+      ? projectData.lowBugs
+      : 0;
+    const safeTestsCoverage = Number.isFinite(projectData.testsCoberage)
+      ? projectData.testsCoberage
+      : 0;
+    const safeDeadline =
+      debouncedDueDate && !isNaN(Date.parse(debouncedDueDate))
+        ? new Date(debouncedDueDate).toISOString()
+        : undefined;
+
+    const updateDto = {
+      name: debouncedProjectName.trim() || projectData.name,
+      description: debouncedDescription || "",
+      status: debouncedProjectStatus, // usa el status debounceado
+      deadline: safeDeadline,
+      pointsBudget: safePointsTotal,
+      pointsUsed: safePointsDone,
+      criticalBugs: safeCriticalBugs,
+      normalBugs: safeNormalBugs,
+      lowBugs: safeLowBugs,
+      testsCoberage: safeTestsCoverage,
+      developersIds: developers.map((d) => d.id),
+    };
+
+    // Detecta si hay cambios para evitar actualizaciones innecesarias
+    const hasChanges =
+      debouncedProjectName.trim() !== (projectData.name || "").trim() ||
+      debouncedDescription !== (projectData.description || "") ||
+      debouncedProjectStatus !== projectData.status ||
+      safeDeadline !== (projectData.deadline ?? undefined) ||
+      safePointsTotal !== (projectData.pointsBudget ?? safePointsTotal) ||
+      safePointsDone !== (projectData.pointsUsed ?? safePointsDone);
+
+    if (!hasChanges) return;
+
+    const saveChanges = async () => {
+      try {
+        const updated = await updateProject(projectId, updateDto);
+        setProjectData(updated);
+      } catch (err) {
+        console.error("Error actualizando proyecto automáticamente:", err);
+      }
+    };
+    saveChanges();
+  }, [
+    debouncedProjectName,
+    debouncedDescription,
+    debouncedProjectStatus,
+    debouncedDueDate,
+    debouncedPointsDone,
+    debouncedPointsTotal,
+    projectId,
+    projectData,
+    developers,
+  ]);
+  useEffect(() => {
+    setDaysRemaining(calcDaysRemaining());
+  }, [dueDate]);
+
+  const openRemoveDevModal = () => setIsDeleteDevModalOpen(true);
+
+  const openDeleteDevModalForProject = () =>
+    setIsDeleteDevModalOpenForProject(true);
+  const closeDeleteDevModalForProject = () =>
+    setIsDeleteDevModalOpenForProject(false);
+
+  const openDeleteDevModalForTask = () => setIsDeleteDevModalOpenForTask(true);
+  const closeDeleteDevModalForTask = () =>
+    setIsDeleteDevModalOpenForTask(false);
+
+  useEffect(() => {
+    const loadAvailableUsers = async () => {
+      if (!projectId || !selectedTask) {
+        setAllAvailableUsers([]);
+        return;
+      }
+      try {
+        const usersInProject = await getDevelopersByProjectId(projectId);
+        const assignedUserIds = selectedTask.developers.map((d) => d.id);
+        const available = usersInProject.filter(
+          (user) => !assignedUserIds.includes(user.id)
+        );
+        setAllAvailableUsers(available);
+      } catch (error) {
+        console.error("Error cargando desarrolladores para proyecto:", error);
+        setAllAvailableUsers([]);
+      }
+    };
+    loadAvailableUsers();
+  }, [projectId, selectedTask]);
 
   useEffect(() => {
     if (!projectId) {
@@ -177,7 +324,6 @@ export default function Page() {
     fetchProject();
   }, [projectId]);
 
-  // Recarga tareas desde backend
   const reloadTasks = async () => {
     if (!projectId) return;
     try {
@@ -202,7 +348,6 @@ export default function Page() {
     }
   };
 
-  // Carga todos los desarrolladores del sistema para el modal AddDev
   const loadAllDevelopers = async () => {
     try {
       const devs = await getAllDevelopers();
@@ -213,7 +358,6 @@ export default function Page() {
     }
   };
 
-  // Crear tarea
   const handleCreateTask = async (newTaskData: {
     name: string;
     points: number;
@@ -242,12 +386,10 @@ export default function Page() {
     }
   };
 
-  // Click en tarea
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
   };
 
-  // Borrar tarea
   const handleDelete = async (id: string) => {
     if (!confirm("¿Estás seguro de que deseas eliminar esta tarea?")) return;
     try {
@@ -260,12 +402,10 @@ export default function Page() {
     }
   };
 
-  // Filtra todos los desarrolladores para el modal AddDev (excluyendo los ya asignados)
   const availableDevelopersToAdd = allDevelopers.filter(
     (dev) => !developers.some((pd) => pd.id === dev.id)
   );
 
-  // Agregar desarrollador al proyecto
   const handleAddUserToProject = async (user: Developer) => {
     if (!projectId || !projectData) {
       alert("Proyecto no válido");
@@ -302,12 +442,10 @@ export default function Page() {
     }
   };
 
-  // Nuevo: Abrir/Cerrar modal eliminar desarrollador
   const [isDeleteDevModalOpen, setIsDeleteDevModalOpen] = useState(false);
   const openDeleteDevModal = () => setIsDeleteDevModalOpen(true);
   const closeDeleteDevModal = () => setIsDeleteDevModalOpen(false);
 
-  // Nuevo: Función para eliminar desarrollador del proyecto
   const handleRemoveUserFromProject = async (user: Developer) => {
     if (!projectId || !projectData) {
       alert("Proyecto no válido");
@@ -402,13 +540,109 @@ export default function Page() {
     }
   };
 
-  // Los demás manejadores de modales, estados, etc. permanecen iguales...
+  const handleRemoveDeveloperFromTask = async (user: Developer) => {
+    if (!selectedTask) return;
+
+    try {
+      const updatedDeveloperIds = selectedTask.developers
+        .filter((d) => d.id !== user.id)
+        .map((d) => d.id);
+
+      const updateDto: UpdateTaskInputDto = {
+        title: selectedTask.name,
+        points: selectedTask.points,
+        developmentHours: selectedTask.developmentHours,
+        status: selectedTask.status,
+        developerIds: updatedDeveloperIds,
+      };
+
+      const updatedTask = await updateTask(selectedTask.id, updateDto);
+
+      setSelectedTask({
+        ...selectedTask,
+        developers: updatedTask.developers.map((d) => ({
+          id: d.id,
+          email: d.email,
+          photoUrl: d.photoUrl ?? null,
+        })),
+      });
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === updatedTask.id
+            ? {
+                ...task,
+                developers: updatedTask.developers.map((d) => ({
+                  id: d.id,
+                  email: d.email,
+                  photoUrl: d.photoUrl ?? null,
+                })),
+                name: updatedTask.title,
+                points: updatedTask.points,
+                developmentHours: updatedTask.developmentHours ?? 0,
+                status: updatedTask.status,
+              }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error("Error eliminando desarrollador de tarea:", error);
+      alert("No se pudo eliminar el desarrollador. Intenta nuevamente.");
+    }
+  };
 
   const openAddTaskModal = () => setIsAddTaskModalOpen(true);
   const closeAddTaskModal = () => setIsAddTaskModalOpen(false);
   const openAddDevModal = () => setIsAddDevModalOpen(true);
   const closeAddDevModal = () => setIsAddDevModalOpen(false);
   const closeModal = () => setSelectedTask(null);
+
+  const handleSaveTaskFromModal = async (updatedData: {
+    taskName: string;
+    points: number;
+    developmentHours: number;
+    status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DEPLOYED";
+    developerIds: string[];
+  }) => {
+    if (!selectedTask) return;
+    try {
+      const updateTaskDto: UpdateTaskInputDto = {
+        title: updatedData.taskName,
+        points: updatedData.points,
+        developmentHours: updatedData.developmentHours,
+        status: updatedData.status,
+        developerIds: updatedData.developerIds,
+      };
+      const updatedTask: UpdateTaskOutputDto = await updateTask(
+        selectedTask.id,
+        updateTaskDto
+      );
+
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === updatedTask.id
+            ? {
+                ...task,
+                name: updatedTask.title,
+                points: updatedTask.points,
+                developmentHours: updatedTask.developmentHours ?? 0,
+                status: updatedTask.status,
+                developers: updatedTask.developers.map((d) => ({
+                  id: d.id,
+                  email: d.email,
+                  photoUrl: null,
+                })),
+              }
+            : task
+        )
+      );
+      setSelectedTask(null);
+    } catch (error) {
+      console.error("Error actualizando tarea:", error);
+      alert("No se pudo guardar la tarea. Intente nuevamente.");
+    }
+  };
+
   const saveTaskChanges = () => {
     alert("Guardar cambios para tarea: " + (selectedTask?.name ?? ""));
     closeModal();
@@ -446,7 +680,6 @@ export default function Page() {
     ]);
   };
 
-  // Días para deadline y estados
   const calcDaysRemaining = () => {
     const now = new Date();
     const due = new Date(dueDate);
@@ -466,14 +699,7 @@ export default function Page() {
     yellow: "#facc15",
     red: "#f87171",
   };
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as ProjectStatus;
-    setProjectData((prev) => (prev ? { ...prev, status: value } : prev));
-    const statusMapping = projectStatusOptions.find((s) => s.value === value);
-    setStatus(statusMapping?.color ?? "red");
-  };
 
-  // Render y JSX
   if (loading) return <p className="p-6 text-center">Cargando proyecto...</p>;
   if (error) return <p className="p-6 text-center text-red-600">{error}</p>;
   if (!projectData)
@@ -503,7 +729,7 @@ export default function Page() {
           <select
             aria-label="Cambiar estado del proyecto"
             value={projectData.status}
-            onChange={handleStatusChange}
+            onChange={handleProjectStatusChange}
             className="bg-transparent border-none outline-none cursor-pointer font-bold text-sm text-[#121212]"
             style={{ backgroundColor: "transparent" }}
           >
@@ -663,10 +889,29 @@ export default function Page() {
           developers={selectedTask.developers}
           points={selectedTask.points}
           developmentHours={selectedTask.developmentHours}
-          onAddDeveloper={addDeveloperToSelectedTask}
-          onRemoveDeveloper={removeDeveloperFromSelectedTask}
-          onSave={saveTaskChanges}
+          allAvailableUsers={allAvailableUsers}
+          onAddDeveloper={() => {}}
+          onRemoveDeveloper={openDeleteDevModalForTask}
+          onSave={handleSaveTaskFromModal}
           onClose={closeModal}
+        />
+      )}
+
+      {/* Modal para eliminar dev de la tarea */}
+      {isDeleteDevModalOpenForTask && selectedTask && (
+        <DeleteDevModal
+          developers={selectedTask.developers}
+          onRemoveUser={handleRemoveDeveloperFromTask}
+          onClose={closeDeleteDevModalForTask}
+        />
+      )}
+
+      {/* Modal para eliminar dev del proyecto */}
+      {isDeleteDevModalOpenForProject && (
+        <DeleteDevModal
+          developers={developers}
+          onRemoveUser={handleRemoveUserFromProject}
+          onClose={closeDeleteDevModalForProject}
         />
       )}
 
@@ -694,6 +939,17 @@ export default function Page() {
           users={availableDevelopersToAdd}
           onAddUser={handleAddUserToProject}
           onClose={closeAddDevModal}
+        />
+      )}
+
+      {isDeleteDevModalOpen && selectedTask && (
+        <DeleteDevModal
+          developers={selectedTask.developers}
+          onRemoveUser={async (user) => {
+            // Elimina el developer en backend y actualiza estados
+            await handleRemoveDeveloperFromTask(user);
+          }}
+          onClose={() => setIsDeleteDevModalOpen(false)}
         />
       )}
 
