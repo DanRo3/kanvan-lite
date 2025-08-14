@@ -89,6 +89,7 @@ export const updateTaskStatus = async (
 };
 
 export const deleteTask = async (id: string): Promise<void> => {
+  console.log(`ENTRADA AL DELETE`);
   try {
     await api.delete(`${BASE_PATH}/${id}`);
   } catch (error) {

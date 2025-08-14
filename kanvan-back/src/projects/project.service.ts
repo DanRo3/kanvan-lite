@@ -257,7 +257,6 @@ export class ProjectsService {
 
     return false;
   }
-
   async update(projectId: string, updateProjectDto: UpdateProjectDto, user) {
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
@@ -281,10 +280,10 @@ export class ProjectsService {
       ...(restData.deadline ? { deadline: new Date(restData.deadline) } : {}),
     };
 
-    // Si vienen developersIds, conectar esos developers
-    if (developersIds && developersIds.length > 0) {
+    // Si vienen developersIds, reemplazar la lista con 'set'
+    if (developersIds) {
       dataToUpdate.developers = {
-        connect: developersIds.map((id) => ({ id })),
+        set: developersIds.map((id) => ({ id })),
       };
     }
 

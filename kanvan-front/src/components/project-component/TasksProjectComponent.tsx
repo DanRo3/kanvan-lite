@@ -24,11 +24,13 @@ export interface Task {
 interface TasksProjectComponentProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
+  onDelete: (id: string) => void; // <-- Agregamos prop para borrar
 }
 
 const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
   tasks,
   onTaskClick,
+  onDelete,
 }) => {
   return (
     <div className="flex gap-4 mt-6 w-full h-[400px]">
@@ -48,7 +50,7 @@ const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
                 if (e.key === "Enter" || e.key === " ") onTaskClick(task);
               }}
             >
-              <TaskCard {...task} />
+              <TaskCard {...task} onDelete={onDelete} />
             </div>
           ))}
       </section>
@@ -69,7 +71,7 @@ const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
                 if (e.key === "Enter" || e.key === " ") onTaskClick(task);
               }}
             >
-              <TaskCard {...task} />
+              <TaskCard {...task} onDelete={onDelete} />
             </div>
           ))}
       </section>
@@ -90,7 +92,7 @@ const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
                 if (e.key === "Enter" || e.key === " ") onTaskClick(task);
               }}
             >
-              <TaskCard {...task} />
+              <TaskCard {...task} onDelete={onDelete} />
             </div>
           ))}
       </section>
@@ -111,7 +113,7 @@ const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
                 if (e.key === "Enter" || e.key === " ") onTaskClick(task);
               }}
             >
-              <TaskCard {...task} />
+              <TaskCard {...task} onDelete={onDelete} />
             </div>
           ))}
       </section>

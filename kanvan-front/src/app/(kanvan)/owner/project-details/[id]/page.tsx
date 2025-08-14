@@ -6,14 +6,17 @@ import { useParams } from "next/navigation";
 import Risk from "@/api/risks/interface/input/risk.input.dto";
 import RiskCard from "@/components/project-component/RisksCard";
 import QualityCard from "@/components/project-component/QualityCard";
-import TasksProjectComponent from "@/components/project-component/TasksProjectComponent";
+import ProjectTasksPage from "@/components/project-component/TasksProjectComponent";
 import ProjectAvatars from "@/components/project-component/ProjectAvatars";
 import EditDetailTaskModal from "@/components/modals/EditDetailsTask";
 import AddDevModal from "@/components/modals/AddDevModal";
 import AddRiskModal from "@/components/modals/AddRiskModal";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 
-import { getProjectById } from "@/api/projects/service/project.service";
+import {
+  getProjectById,
+  updateProject,
+} from "@/api/projects/service/project.service";
 import CreateProjectOutputDto from "@/api/projects/interface/output/create-project.output.dto";
 
 import { createRisk, deleteRisk } from "@/api/risks/services/risk.service";
@@ -23,8 +26,11 @@ import { RiskScope } from "@/api/risks/enums/risk-scope.enum";
 import {
   createTask,
   getTasksByProjectId,
+  deleteTask,
 } from "@/api/tasks/services/task.service";
+
 import { ProjectStatus } from "@/api/projects/interface/input/update-project.input.dto";
+import { getAllDevelopers } from "@/api/user/service/user.service";
 
 interface Developer {
   id: string;
@@ -47,6 +53,9 @@ interface Task {
   developmentHours: number;
 }
 
+// Nuevo: Importar modal para eliminar desarrolladores
+import DeleteDevModal from "@/components/modals/DeleteDevModal";
+
 const projectStatusOptions: {
   value: ProjectStatus;
   label: string;
@@ -57,7 +66,7 @@ const projectStatusOptions: {
   { value: "COMPLETED", label: "Completado", color: "green" },
 ];
 
-// Helper para mapear status numérico o string que venga de backend a strings esperados
+// Helper para mapear status numérico o string a Task["status"]
 const mapTaskStatus = (status: number | string): Task["status"] => {
   if (typeof status === "string") {
     const s = status.toUpperCase();
@@ -82,7 +91,6 @@ export default function Page() {
   const params = useParams();
   const { id } = params;
 
-  // Calculamos projectId estable
   const projectId = Array.isArray(id) ? id[0] : id;
 
   const [projectData, setProjectData] = useState<CreateProjectOutputDto | null>(
@@ -96,6 +104,7 @@ export default function Page() {
   const [pointsDone, setPointsDone] = useState(0);
   const [pointsTotal, setPointsTotal] = useState(0);
   const [description, setDescription] = useState("");
+  // Estado para desarrolladores asignados al proyecto
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
 
@@ -108,7 +117,9 @@ export default function Page() {
 
   const scopesList: RiskScope[] = ["LOW", "NORMAL", "CRITICAL"];
 
-  // Load project and tasks once
+  // Estado para todos los desarrolladores del sistema (para modal añadir)
+  const [allDevelopers, setAllDevelopers] = useState<Developer[]>([]);
+
   useEffect(() => {
     if (!projectId) {
       setError("No se especificó el ID del proyecto");
@@ -120,7 +131,6 @@ export default function Page() {
       setLoading(true);
       setError(null);
       try {
-        // Datos proyecto
         const data = await getProjectById(projectId);
         setProjectData(data);
 
@@ -153,8 +163,8 @@ export default function Page() {
         );
         setStatus(statusMapping?.color ?? "red");
 
-        // Tareas del proyecto
         await reloadTasks();
+        await loadAllDevelopers();
 
         setLoading(false);
       } catch (e) {
@@ -165,9 +175,9 @@ export default function Page() {
     };
 
     fetchProject();
-  }, [projectId]); // Solo al montar o cambiar projectId
+  }, [projectId]);
 
-  // Función para recargar las tareas desde backend y actualizar estado
+  // Recarga tareas desde backend
   const reloadTasks = async () => {
     if (!projectId) return;
     try {
@@ -192,7 +202,18 @@ export default function Page() {
     }
   };
 
-  // Crear tarea y luego recargar lista completa
+  // Carga todos los desarrolladores del sistema para el modal AddDev
+  const loadAllDevelopers = async () => {
+    try {
+      const devs = await getAllDevelopers();
+      console.log("Todos los desarrolladores:", devs);
+      setAllDevelopers(devs);
+    } catch (error) {
+      console.error("Error cargando desarrolladores:", error);
+    }
+  };
+
+  // Crear tarea
   const handleCreateTask = async (newTaskData: {
     name: string;
     points: number;
@@ -203,7 +224,6 @@ export default function Page() {
       alert("Proyecto no cargado.");
       return;
     }
-
     try {
       const createTaskDto = {
         title: newTaskData.name,
@@ -214,9 +234,7 @@ export default function Page() {
 
       await createTask(createTaskDto);
 
-      // Recarga lista actualizada de tareas
       await reloadTasks();
-
       closeAddTaskModal();
     } catch (error) {
       console.error("Error creando tarea:", error);
@@ -224,7 +242,111 @@ export default function Page() {
     }
   };
 
-  // Otros manejadores modales y estados
+  // Click en tarea
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+  };
+
+  // Borrar tarea
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar esta tarea?")) return;
+    try {
+      await deleteTask(id);
+      setTasks((prev) => prev.filter((task) => task.id !== id));
+      if (selectedTask?.id === id) setSelectedTask(null);
+    } catch (error) {
+      console.error("Error eliminando tarea:", error);
+      alert("No se pudo eliminar la tarea. Intente nuevamente.");
+    }
+  };
+
+  // Filtra todos los desarrolladores para el modal AddDev (excluyendo los ya asignados)
+  const availableDevelopersToAdd = allDevelopers.filter(
+    (dev) => !developers.some((pd) => pd.id === dev.id)
+  );
+
+  // Agregar desarrollador al proyecto
+  const handleAddUserToProject = async (user: Developer) => {
+    if (!projectId || !projectData) {
+      alert("Proyecto no válido");
+      return;
+    }
+
+    try {
+      const updatedDevelopersIds = [...developers.map((d) => d.id), user.id];
+
+      const updateProjectDto = {
+        name: projectName,
+        description: description,
+        status: projectData.status,
+        deadline: dueDate || null,
+        pointsBudget: pointsTotal,
+        developersIds: updatedDevelopersIds,
+      };
+
+      const updatedProject = await updateProject(projectId, updateProjectDto);
+
+      setDevelopers(
+        updatedProject.developers.map((d: any) => ({
+          id: d.id,
+          email: d.email,
+          photoUrl: null,
+        }))
+      );
+      setProjectData(updatedProject);
+
+      closeAddDevModal();
+    } catch (error) {
+      console.error("Error agregando desarrollador:", error);
+      alert("No se pudo agregar el desarrollador. Intenta nuevamente.");
+    }
+  };
+
+  // Nuevo: Abrir/Cerrar modal eliminar desarrollador
+  const [isDeleteDevModalOpen, setIsDeleteDevModalOpen] = useState(false);
+  const openDeleteDevModal = () => setIsDeleteDevModalOpen(true);
+  const closeDeleteDevModal = () => setIsDeleteDevModalOpen(false);
+
+  // Nuevo: Función para eliminar desarrollador del proyecto
+  const handleRemoveUserFromProject = async (user: Developer) => {
+    if (!projectId || !projectData) {
+      alert("Proyecto no válido");
+      return;
+    }
+    try {
+      const filteredDevelopersIds = developers
+        .filter((d) => d.id !== user.id)
+        .map((d) => d.id);
+
+      const updateProjectDto = {
+        name: projectName,
+        description: projectData.description,
+        status: projectData.status,
+        deadline: dueDate || null,
+        pointsBudget: pointsTotal,
+        developersIds: filteredDevelopersIds,
+      };
+
+      console.log("Request PATCH updateProject", projectId, updateProjectDto);
+
+      const updatedProject = await updateProject(projectId, updateProjectDto);
+
+      console.log("Respuesta updateProject", updatedProject);
+
+      setDevelopers(
+        updatedProject.developers.map((d: any) => ({
+          id: d.id,
+          email: d.email,
+          photoUrl: null,
+        }))
+      );
+      setProjectData(updatedProject);
+      console.log("Respuesta updateProject setteado", updatedProject);
+    } catch (error) {
+      console.error("Error eliminando desarrollador:", error);
+      alert("No se pudo eliminar el desarrollador. Intenta nuevamente.");
+    }
+  };
 
   const openAddRiskModal = () => setIsAddRiskModalOpen(true);
   const closeAddRiskModal = () => setIsAddRiskModalOpen(false);
@@ -280,25 +402,17 @@ export default function Page() {
     }
   };
 
+  // Los demás manejadores de modales, estados, etc. permanecen iguales...
+
   const openAddTaskModal = () => setIsAddTaskModalOpen(true);
   const closeAddTaskModal = () => setIsAddTaskModalOpen(false);
-
   const openAddDevModal = () => setIsAddDevModalOpen(true);
   const closeAddDevModal = () => setIsAddDevModalOpen(false);
-
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-  };
-
-  const closeModal = () => {
-    setSelectedTask(null);
-  };
-
+  const closeModal = () => setSelectedTask(null);
   const saveTaskChanges = () => {
     alert("Guardar cambios para tarea: " + (selectedTask?.name ?? ""));
     closeModal();
   };
-
   const addDeveloperToSelectedTask = () => {
     if (!selectedTask) return;
     const newDev: Developer = {
@@ -311,7 +425,6 @@ export default function Page() {
       developers: [...selectedTask.developers, newDev],
     });
   };
-
   const removeDeveloperFromSelectedTask = () => {
     if (!selectedTask) return;
     setSelectedTask({
@@ -322,8 +435,7 @@ export default function Page() {
       ),
     });
   };
-
-  const handleAddUserToProject = (user: User) => {
+  const handleAddUserToProjectLocal = (user: User) => {
     if (developers.find((d) => d.id === user.id)) {
       alert("El desarrollador ya está agregado al proyecto.");
       return;
@@ -334,6 +446,7 @@ export default function Page() {
     ]);
   };
 
+  // Días para deadline y estados
   const calcDaysRemaining = () => {
     const now = new Date();
     const due = new Date(dueDate);
@@ -348,21 +461,19 @@ export default function Page() {
     }, 1000 * 60 * 60);
     return () => clearInterval(interval);
   }, [dueDate]);
-
   const statusColors: Record<typeof status, string> = {
     green: "#4ade80",
     yellow: "#facc15",
     red: "#f87171",
   };
-
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as ProjectStatus;
     setProjectData((prev) => (prev ? { ...prev, status: value } : prev));
-
     const statusMapping = projectStatusOptions.find((s) => s.value === value);
     setStatus(statusMapping?.color ?? "red");
   };
 
+  // Render y JSX
   if (loading) return <p className="p-6 text-center">Cargando proyecto...</p>;
   if (error) return <p className="p-6 text-center text-red-600">{error}</p>;
   if (!projectData)
@@ -372,7 +483,7 @@ export default function Page() {
     <>
       <main
         className={`p-10 min-h-screen relative font-sans bg-[#121212] text-[#e0e0e0] ${
-          selectedTask || isAddDevModalOpen
+          selectedTask || isAddDevModalOpen || isDeleteDevModalOpen
             ? "filter blur-sm brightness-90 pointer-events-none select-none"
             : ""
         }`}
@@ -472,6 +583,7 @@ export default function Page() {
           </div>
         </div>
 
+        {/* Desarrolladores */}
         <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
           Desarrolladores
         </div>
@@ -479,9 +591,10 @@ export default function Page() {
           developers={developers}
           showButtons={true}
           onAdd={openAddDevModal}
-          onRemove={() => alert("Borrado")}
+          onRemove={openDeleteDevModal}
         />
 
+        {/* Descripción del Proyecto */}
         <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
           Descripción del Proyecto
         </div>
@@ -493,6 +606,7 @@ export default function Page() {
           className="mt-2 w-full bg-white/5 border border-green-400 rounded-xl text-[#e0e0e0] text-base p-3 font-sans resize-y min-h-[150px] outline-none"
         />
 
+        {/* Botón nueva tarea */}
         <div className="flex justify-start mt-6 mb-3">
           <button
             type="button"
@@ -504,12 +618,14 @@ export default function Page() {
           </button>
         </div>
 
-        <TasksProjectComponent
+        {/* Componente tareas con función delete */}
+        <ProjectTasksPage
           tasks={tasks}
           onTaskClick={handleTaskClick}
-          projectId={id}
+          onDelete={handleDelete}
         />
 
+        {/* Riesgos */}
         <RiskCard
           risks={risks}
           showAddButton={true}
@@ -517,8 +633,10 @@ export default function Page() {
           onDeleteRisk={handleDeleteRisk}
         />
 
+        {/* Calidad */}
         <QualityCard editable={true} />
 
+        {/* Botones Guardar y Salir */}
         <div className="flex gap-3 mt-6 justify-end">
           <button
             type="button"
@@ -537,6 +655,7 @@ export default function Page() {
         </div>
       </main>
 
+      {/* Modal editar tarea */}
       {selectedTask && (
         <EditDetailTaskModal
           taskName={selectedTask.name}
@@ -551,6 +670,7 @@ export default function Page() {
         />
       )}
 
+      {/* Modal añadir riesgo */}
       {isAddRiskModalOpen && (
         <AddRiskModal
           scopes={scopesList}
@@ -559,6 +679,7 @@ export default function Page() {
         />
       )}
 
+      {/* Modal añadir tarea */}
       {isAddTaskModalOpen && (
         <AddTaskModal
           developers={developers}
@@ -567,11 +688,21 @@ export default function Page() {
         />
       )}
 
+      {/* Modal añadir desarrollador */}
       {isAddDevModalOpen && (
         <AddDevModal
-          users={[]} // Aquí puedes pasar todos los usuarios disponibles si tienes la info
+          users={availableDevelopersToAdd}
           onAddUser={handleAddUserToProject}
           onClose={closeAddDevModal}
+        />
+      )}
+
+      {/* Modal eliminar desarrollador */}
+      {isDeleteDevModalOpen && (
+        <DeleteDevModal
+          developers={developers}
+          onRemoveUser={handleRemoveUserFromProject}
+          onClose={closeDeleteDevModal}
         />
       )}
     </>

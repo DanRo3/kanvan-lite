@@ -52,9 +52,7 @@ export const updateProject = async (
   projectData: UpdateProjectInputDto
 ): Promise<UpdateProjectOutputDto> => {
   try {
-    // Igual que create, si necesitas FormData para archivos adapta aquí
-
-    const response = await api.put<UpdateProjectOutputDto>(
+    const response = await api.patch<UpdateProjectOutputDto>(
       `${BASE_PATH}/${id}`,
       projectData,
       {

@@ -24,4 +24,6 @@ export default interface UpdateProjectInputDto {
   lowBugs?: number;
 
   testCoberage?: number;
+
+  developersIds?: string[];
 }
