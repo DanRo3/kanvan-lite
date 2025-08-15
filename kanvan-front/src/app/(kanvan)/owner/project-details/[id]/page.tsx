@@ -161,6 +161,25 @@ export default function Page() {
     setStatus(statusMapping?.color ?? "red");
   };
 
+  const handleQualityMetricChange = (metricKey: string, value: number) => {
+    switch (metricKey) {
+      case "criticalBugs":
+        setCriticalBugs(value);
+        break;
+      case "normalBugs":
+        setNormalBugs(value);
+        break;
+      case "lowBugs":
+        setLowBugs(value);
+        break;
+      case "testsCoverage":
+        setTestsCoberage(value);
+        break;
+      default:
+        break;
+    }
+  };
+
   useEffect(() => {
     if (!projectId || !projectData) return;
 
@@ -194,10 +213,10 @@ export default function Page() {
       deadline: safeDeadline,
       pointsBudget: safePointsTotal,
       pointsUsed: safePointsDone,
-      criticalBugs: safeCriticalBugs,
-      normalBugs: safeNormalBugs,
-      lowBugs: safeLowBugs,
-      testsCoberage: safeTestsCoberage,
+      criticalBugs: debouncedCriticalBugs,
+      normalBugs: debouncedNormalBugs,
+      lowBugs: debouncedLowBugs,
+      testsCoberage: debouncedTestsCoberage,
       developersIds: developers.map((d) => d.id),
     };
 
@@ -210,7 +229,11 @@ export default function Page() {
       debouncedProjectStatus !== projectData.status ||
       safeDeadline !== (projectData.deadline ?? undefined) ||
       safePointsTotal !== (projectData.pointsBudget ?? safePointsTotal) ||
-      safePointsDone !== (projectData.pointsUsed ?? safePointsDone);
+      safePointsDone !== (projectData.pointsUsed ?? safePointsDone) ||
+      debouncedCriticalBugs !== (projectData.criticalBugs ?? 0) ||
+      debouncedNormalBugs !== (projectData.normalBugs ?? 0) ||
+      debouncedLowBugs !== (projectData.lowBugs ?? 0) ||
+      debouncedTestsCoberage !== (projectData.testsCoberage ?? 0);
 
     if (!hasChanges) return;
 
@@ -231,6 +254,10 @@ export default function Page() {
     debouncedDueDate,
     debouncedPointsDone,
     debouncedPointsTotal,
+    debouncedCriticalBugs,
+    debouncedNormalBugs,
+    debouncedLowBugs,
+    debouncedTestsCoberage,
     projectId,
     projectData,
     developers,
@@ -882,6 +909,7 @@ export default function Page() {
           normalBugs={normalBugs}
           lowBugs={lowBugs}
           testsCoberage={testsCoberage}
+          onMetricChange={handleQualityMetricChange}
         />
 
         {/* Botones Guardar y Salir */}
