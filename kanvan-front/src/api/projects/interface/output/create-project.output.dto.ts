@@ -11,6 +11,12 @@ export enum RiskScope {
   CRITICAL,
 }
 
+export enum ProjectStatus {
+  PLANNED = "PLANNED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+}
+
 export interface UserDto {
   id: string;
   name: string;
@@ -38,7 +44,7 @@ export default interface CreateProjectOutputDto {
   publicId?: string;
   name: string;
   description?: string;
-  status?: string;
+  status?: ProjectStatus;
   pointsBudget?: number;
   pointsUsed?: number;
   deadline?: string;

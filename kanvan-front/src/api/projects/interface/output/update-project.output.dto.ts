@@ -12,9 +12,9 @@ export enum RiskScope {
 }
 
 export enum ProjectStatus {
-  PLANNED,
-  IN_PROGRESS,
-  COMPLETED,
+  PLANNED = "PLANNED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
 }
 
 export interface UserDto {

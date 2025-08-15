@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
 import Risk from "@/api/risks/interface/input/risk.input.dto";
@@ -60,7 +60,6 @@ interface Task {
   developmentHours: number;
 }
 
-// Nuevo: Importar modal para eliminar desarrolladores
 import DeleteDevModal from "@/components/modals/DeleteDevModal";
 import { useDebounce } from "@/hooks/useDebounce.hook";
 
@@ -127,7 +126,11 @@ export default function Page() {
   const debouncedDueDate = useDebounce(dueDate, 450);
   const debouncedPointsDone = useDebounce(pointsDone, 450);
   const debouncedPointsTotal = useDebounce(pointsTotal, 450);
-  const debouncedStatus = useDebounce(projectData?.status || "PLANNED", 450);
+  const [projectStatusLocal, setProjectStatusLocal] = useState<ProjectStatus>(
+    projectData?.status || "PLANNED"
+  );
+
+  const debouncedProjectStatus = useDebounce(projectStatusLocal, 450);
 
   const [isDeleteDevModalOpenForProject, setIsDeleteDevModalOpenForProject] =
     useState(false);
@@ -139,12 +142,6 @@ export default function Page() {
 
   const [allAvailableUsers, setAllAvailableUsers] = useState<User[]>([]);
 
-  const [projectStatusLocal, setProjectStatusLocal] = useState<ProjectStatus>(
-    projectData?.status || "PLANNED"
-  );
-
-  const debouncedProjectStatus = useDebounce(projectStatusLocal, 450);
-
   const handleProjectStatusChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -153,12 +150,6 @@ export default function Page() {
     const statusMapping = projectStatusOptions.find((s) => s.value === value);
     setStatus(statusMapping?.color ?? "red");
   };
-
-  useEffect(() => {
-    if (projectData?.status) {
-      setProjectStatusLocal(projectData.status);
-    }
-  }, [projectData?.status]);
 
   useEffect(() => {
     if (!projectId || !projectData) return;
@@ -189,7 +180,7 @@ export default function Page() {
     const updateDto = {
       name: debouncedProjectName.trim() || projectData.name,
       description: debouncedDescription || "",
-      status: debouncedProjectStatus, // usa el status debounceado
+      status: debouncedProjectStatus,
       deadline: safeDeadline,
       pointsBudget: safePointsTotal,
       pointsUsed: safePointsDone,
@@ -199,6 +190,8 @@ export default function Page() {
       testsCoberage: safeTestsCoverage,
       developersIds: developers.map((d) => d.id),
     };
+
+    console.log(updateDto);
 
     // Detecta si hay cambios para evitar actualizaciones innecesarias
     const hasChanges =
@@ -214,6 +207,7 @@ export default function Page() {
     const saveChanges = async () => {
       try {
         const updated = await updateProject(projectId, updateDto);
+        console.log(updated);
         setProjectData(updated);
       } catch (err) {
         console.error("Error actualizando proyecto automáticamente:", err);
@@ -231,14 +225,11 @@ export default function Page() {
     projectData,
     developers,
   ]);
+
   useEffect(() => {
     setDaysRemaining(calcDaysRemaining());
   }, [dueDate]);
 
-  const openRemoveDevModal = () => setIsDeleteDevModalOpen(true);
-
-  const openDeleteDevModalForProject = () =>
-    setIsDeleteDevModalOpenForProject(true);
   const closeDeleteDevModalForProject = () =>
     setIsDeleteDevModalOpenForProject(false);
 
@@ -267,6 +258,7 @@ export default function Page() {
     loadAvailableUsers();
   }, [projectId, selectedTask]);
 
+  // Carga inicial y actualización del estado de la UI
   useEffect(() => {
     if (!projectId) {
       setError("No se especificó el ID del proyecto");
@@ -280,7 +272,6 @@ export default function Page() {
       try {
         const data = await getProjectById(projectId);
         setProjectData(data);
-
         setProjectName(data.name);
         setDueDate(
           data.deadline
@@ -290,6 +281,10 @@ export default function Page() {
         setPointsDone(data.pointsUsed ?? 0);
         setPointsTotal(data.pointsBudget ?? 0);
         setDescription(data.description ?? "");
+
+        // Sincroniza el estado local con el dato recibido del backend
+        setProjectStatusLocal(data.status);
+
         setDevelopers(
           data.developers.map((d) => ({
             id: d.id,
@@ -312,7 +307,6 @@ export default function Page() {
 
         await reloadTasks();
         await loadAllDevelopers();
-
         setLoading(false);
       } catch (e) {
         setError("Error al cargar el proyecto");
@@ -323,6 +317,13 @@ export default function Page() {
 
     fetchProject();
   }, [projectId]);
+
+  useEffect(() => {
+    const statusMapping = projectStatusOptions.find(
+      (s) => s.value === projectStatusLocal
+    );
+    setStatus(statusMapping?.color ?? "red");
+  }, [projectStatusLocal]);
 
   const reloadTasks = async () => {
     if (!projectId) return;
@@ -728,7 +729,7 @@ export default function Page() {
         >
           <select
             aria-label="Cambiar estado del proyecto"
-            value={projectData.status}
+            value={projectStatusLocal}
             onChange={handleProjectStatusChange}
             className="bg-transparent border-none outline-none cursor-pointer font-bold text-sm text-[#121212]"
             style={{ backgroundColor: "transparent" }}
