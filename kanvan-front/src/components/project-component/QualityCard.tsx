@@ -1,17 +1,53 @@
 import React from "react";
 
 interface QualityCardProps {
-  editable?: boolean; // Por defecto true para mantener comportamiento actual
+  editable?: boolean; // Por defecto true
+  criticalBugs: number;
+  normalBugs: number;
+  lowBugs: number;
+  testsCoberage: number;
+  onMetricChange?: (metric: string, value: number) => void;
 }
 
-const QualityCard: React.FC<QualityCardProps> = ({ editable = true }) => {
+const QualityCard: React.FC<QualityCardProps> = ({
+  editable = true,
+  criticalBugs,
+  normalBugs,
+  lowBugs,
+  testsCoberage,
+  onMetricChange,
+}: QualityCardProps) => {
+  const totalBugs = criticalBugs + normalBugs + lowBugs;
+
   const metrics = [
-    "Bugs Bajos",
-    "Bugs Normales",
-    "Bugs Críticos",
-    "Bugs Totales",
-    "Cobertura de Tests",
+    { title: "Bugs Bajos", value: lowBugs, key: "lowBugs" },
+    { title: "Bugs Normales", value: normalBugs, key: "normalBugs" },
+    { title: "Bugs Críticos", value: criticalBugs, key: "criticalBugs" },
+    {
+      title: "Bugs Totales",
+      value: totalBugs,
+      key: "totalBugs",
+      editable: false,
+    }, // No editable, es una suma
+    {
+      title: "Cobertura de Tests",
+      value: testsCoberage,
+      key: "testsCoverage",
+      unit: "%",
+    },
   ];
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    key: string
+  ) => {
+    if (!editable || !onMetricChange) return;
+
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value)) {
+      onMetricChange(key, value);
+    }
+  };
 
   return (
     <section
@@ -30,10 +66,11 @@ const QualityCard: React.FC<QualityCardProps> = ({ editable = true }) => {
       </h2>
 
       <div className="flex flex-wrap justify-between gap-6">
-        {metrics.map((title) => (
-          <div
-            key={title}
-            className="
+        {metrics.map(
+          ({ title, value, key, editable: metricEditable, unit = "" }) => (
+            <div
+              key={key}
+              className="
               flex-1 min-w-[140px]
               bg-white/15
               rounded-lg
@@ -41,39 +78,42 @@ const QualityCard: React.FC<QualityCardProps> = ({ editable = true }) => {
               shadow-[0_8px_32px_rgba(31,38,135,0.37)]
               flex flex-col items-center justify-center
             "
-          >
-            <span
-              className="
+            >
+              <span
+                className="
                 text-[#e0e0e0] font-semibold text-lg mb-3 text-center select-none
               "
-            >
-              {title}
-            </span>
-            <input
-              type="number"
-              min={0}
-              step={1}
-              defaultValue={0}
-              aria-label={`${title} ${editable ? "editable" : "no editable"}`}
-              onClick={(e) => {
-                if (editable) e.currentTarget.select();
-              }}
-              readOnly={!editable}
-              className={`
+              >
+                {title}
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={value}
+                onChange={(e) => handleInputChange(e, key)}
+                aria-label={`${title} ${editable ? "editable" : "no editable"}`}
+                onClick={(e) => {
+                  if (editable && metricEditable !== false)
+                    e.currentTarget.select();
+                }}
+                readOnly={!editable || metricEditable === false}
+                className={`
                 w-20
                 text-2xl font-extrabold text-green-400
                 text-center
                 bg-transparent border-none outline-none
                 appearance-none
                 ${
-                  editable
-                    ? "cursor-text"
-                    : "cursor-not-allowed text-green-700/60"
+                  !editable || metricEditable === false
+                    ? "cursor-not-allowed text-green-700/60"
+                    : "cursor-text"
                 }
               `}
-            />
-          </div>
-        ))}
+              />
+            </div>
+          )
+        )}
       </div>
     </section>
   );

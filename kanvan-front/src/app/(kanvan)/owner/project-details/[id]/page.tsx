@@ -121,6 +121,16 @@ export default function Page() {
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isAddDevModalOpen, setIsAddDevModalOpen] = useState(false);
 
+  const [criticalBugs, setCriticalBugs] = useState(0);
+  const [normalBugs, setNormalBugs] = useState(0);
+  const [lowBugs, setLowBugs] = useState(0);
+  const [testsCoberage, setTestsCoberage] = useState(0);
+
+  const debouncedCriticalBugs = useDebounce(criticalBugs, 450);
+  const debouncedNormalBugs = useDebounce(normalBugs, 450);
+  const debouncedLowBugs = useDebounce(lowBugs, 450);
+  const debouncedTestsCoberage = useDebounce(testsCoberage, 450);
+
   const debouncedProjectName = useDebounce(projectName, 450);
   const debouncedDescription = useDebounce(description, 450);
   const debouncedDueDate = useDebounce(dueDate, 450);
@@ -169,7 +179,7 @@ export default function Page() {
     const safeLowBugs = Number.isFinite(projectData.lowBugs)
       ? projectData.lowBugs
       : 0;
-    const safeTestsCoverage = Number.isFinite(projectData.testsCoberage)
+    const safeTestsCoberage = Number.isFinite(projectData.testsCoberage)
       ? projectData.testsCoberage
       : 0;
     const safeDeadline =
@@ -187,7 +197,7 @@ export default function Page() {
       criticalBugs: safeCriticalBugs,
       normalBugs: safeNormalBugs,
       lowBugs: safeLowBugs,
-      testsCoberage: safeTestsCoverage,
+      testsCoberage: safeTestsCoberage,
       developersIds: developers.map((d) => d.id),
     };
 
@@ -299,6 +309,11 @@ export default function Page() {
             scope: typeof r.scope === "string" ? r.scope.toUpperCase() : "LOW",
           }))
         );
+
+        setCriticalBugs(data.criticalBugs ?? 0);
+        setNormalBugs(data.normalBugs ?? 0);
+        setLowBugs(data.lowBugs ?? 0);
+        setTestsCoberage(data.testsCoberage ?? 0);
 
         const statusMapping = projectStatusOptions.find(
           (s) => s.value === data.status
@@ -861,7 +876,13 @@ export default function Page() {
         />
 
         {/* Calidad */}
-        <QualityCard editable={true} />
+        <QualityCard
+          editable={true}
+          criticalBugs={criticalBugs}
+          normalBugs={normalBugs}
+          lowBugs={lowBugs}
+          testsCoberage={testsCoberage}
+        />
 
         {/* Botones Guardar y Salir */}
         <div className="flex gap-3 mt-6 justify-end">
