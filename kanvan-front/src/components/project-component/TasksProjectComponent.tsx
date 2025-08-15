@@ -61,7 +61,7 @@ const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
         onTaskClick={onTaskClick}
         onDelete={onDelete}
         onDrop={onDrop}
-        bgColor="#F59E0B"
+        bgColor="#F5B93E"
       />
       <DropTargetSection
         status="DEPLOYED"

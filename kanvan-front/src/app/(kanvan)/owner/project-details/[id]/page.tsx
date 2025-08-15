@@ -156,11 +156,11 @@ export default function Page() {
 
   const [allAvailableUsers, setAllAvailableUsers] = useState<User[]>([]);
 
-  const handleDrop = async (taskId: string, newStatus: TaskStatus) => {
+  const handleDrop = async (taskId: string, newStatus: Status) => {
     console.log(`Tarea ${taskId} movida a ${newStatus}`);
     // Encuentra la tarea en el estado actual
     const taskToUpdate = tasks.find((task) => task.id === taskId);
-    if (!taskToUpdate || taskToUpdate.status === newStatus) return;
+    if (!taskToUpdate) return;
 
     // Pre-optimista: actualiza el estado local de inmediato
     setTasks((prevTasks) =>
