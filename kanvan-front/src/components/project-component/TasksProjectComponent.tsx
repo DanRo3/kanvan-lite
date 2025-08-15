@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import TaskCard from "../task-component/TaskCard";
+import DropTargetSection from "./DropTargetSection"; // NUEVA IMPORTACIÓN
 
 export type Status = "DEPLOYED" | "COMPLETED" | "PENDING" | "IN_PROGRESS";
 
@@ -24,99 +24,54 @@ export interface Task {
 interface TasksProjectComponentProps {
   tasks: Task[];
   onTaskClick: (task: Task) => void;
-  onDelete: (id: string) => void; // <-- Agregamos prop para borrar
+  onDelete: (id: string) => void;
+  onDrop: (taskId: string, newStatus: Status) => void;
 }
 
 const ProjectTasksPage: React.FC<TasksProjectComponentProps> = ({
   tasks,
   onTaskClick,
   onDelete,
+  onDrop,
 }) => {
   return (
     <div className="flex gap-4 mt-6 w-full h-[400px]">
-      {/* Pendientes */}
-      <section className="flex-1 rounded-lg p-4 overflow-y-auto bg-red-400 text-black flex flex-col">
-        <h3>Pendientes</h3>
-        {tasks
-          .filter((t) => t.status === "PENDING")
-          .map((task) => (
-            <div
-              key={task.id}
-              onClick={() => onTaskClick(task)}
-              role="button"
-              tabIndex={0}
-              className="cursor-pointer"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") onTaskClick(task);
-              }}
-            >
-              <TaskCard {...task} onDelete={onDelete} />
-            </div>
-          ))}
-      </section>
-
-      {/* En progreso */}
-      <section className="flex-1 rounded-lg p-4 overflow-y-auto bg-orange-700 text-black flex flex-col">
-        <h3>En Progreso</h3>
-        {tasks
-          .filter((t) => t.status === "IN_PROGRESS")
-          .map((task) => (
-            <div
-              key={task.id}
-              onClick={() => onTaskClick(task)}
-              role="button"
-              tabIndex={0}
-              className="cursor-pointer"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") onTaskClick(task);
-              }}
-            >
-              <TaskCard {...task} onDelete={onDelete} />
-            </div>
-          ))}
-      </section>
-
-      {/* Completadas */}
-      <section className="flex-1 rounded-lg p-4 overflow-y-auto bg-yellow-400 text-black flex flex-col">
-        <h3>Completadas</h3>
-        {tasks
-          .filter((t) => t.status === "COMPLETED")
-          .map((task) => (
-            <div
-              key={task.id}
-              onClick={() => onTaskClick(task)}
-              role="button"
-              tabIndex={0}
-              className="cursor-pointer"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") onTaskClick(task);
-              }}
-            >
-              <TaskCard {...task} onDelete={onDelete} />
-            </div>
-          ))}
-      </section>
-
-      {/* Desplegadas */}
-      <section className="flex-1 rounded-lg p-4 overflow-y-auto bg-green-400 text-black flex flex-col">
-        <h3 className="text-green-900">Desplegadas</h3>
-        {tasks
-          .filter((t) => t.status === "DEPLOYED")
-          .map((task) => (
-            <div
-              key={task.id + "-despl"}
-              onClick={() => onTaskClick(task)}
-              role="button"
-              tabIndex={0}
-              className="cursor-pointer"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") onTaskClick(task);
-              }}
-            >
-              <TaskCard {...task} onDelete={onDelete} />
-            </div>
-          ))}
-      </section>
+      <DropTargetSection
+        status="PENDING"
+        title="Pendientes"
+        tasks={tasks.filter((t) => t.status === "PENDING")}
+        onTaskClick={onTaskClick}
+        onDelete={onDelete}
+        onDrop={onDrop}
+        bgColor="#B91C1C"
+      />
+      <DropTargetSection
+        status="IN_PROGRESS"
+        title="En Progreso"
+        tasks={tasks.filter((t) => t.status === "IN_PROGRESS")}
+        onTaskClick={onTaskClick}
+        onDelete={onDelete}
+        onDrop={onDrop}
+        bgColor="#D97706"
+      />
+      <DropTargetSection
+        status="COMPLETED"
+        title="Completadas"
+        tasks={tasks.filter((t) => t.status === "COMPLETED")}
+        onTaskClick={onTaskClick}
+        onDelete={onDelete}
+        onDrop={onDrop}
+        bgColor="#F59E0B"
+      />
+      <DropTargetSection
+        status="DEPLOYED"
+        title="Desplegadas"
+        tasks={tasks.filter((t) => t.status === "DEPLOYED")}
+        onTaskClick={onTaskClick}
+        onDelete={onDelete}
+        onDrop={onDrop}
+        bgColor="#22C55E"
+      />
     </div>
   );
 };

@@ -1,6 +1,10 @@
+"use client";
+
 import React from "react";
 import { deleteTask } from "@/api/tasks/services/task.service";
-import { FiTrash } from "react-icons/fi"; // Importa el ícono de basura
+import { FiTrash } from "react-icons/fi";
+import { useDrag } from "react-dnd";
+import { Status, Task } from "../project-component/TasksProjectComponent";
 
 interface Developer {
   id: string;
@@ -14,6 +18,10 @@ interface TaskCardProps {
   developers: Developer[];
   href: string;
   onDelete: (id: string) => void;
+  onTaskClick: (task: Task) => void; // AHORA ES UNA PROP REQUERIDA
+  status: Status; // Necesitamos el estado para el `item` del drag
+  points: number; // Necesitamos los puntos para el `item` del drag
+  developmentHours: number; // Necesitamos las horas para el `item` del drag
 }
 
 function getRandomColor(seed: string) {
@@ -31,20 +39,52 @@ const TaskCard: React.FC<TaskCardProps> = ({
   developers,
   href,
   onDelete,
+  onTaskClick,
+  status,
+  points,
+  developmentHours,
 }) => {
   const handleDeleteClick = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
     event.stopPropagation();
-
     onDelete(id);
   };
 
+  const handleClick = (
+    event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    onTaskClick({
+      id,
+      name,
+      developers,
+      href,
+      status,
+      points,
+      developmentHours,
+    });
+  };
+
+  // Hacemos el componente arrastrable usando useDrag
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "TASK", // Define el tipo de elemento arrastrable
+    item: { id, name, status, points, developmentHours, developers }, // Datos que se pasan al soltar
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  }));
+
   return (
     <a
+      ref={drag}
       href={href}
-      className="relative flex flex-col justify-end p-8 pt-8 pb-14 min-h-[120px] max-w-xs rounded-xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_8px_32px_rgba(31,38,135,0.37)] text-gray-300 font-sans no-underline cursor-pointer transition-transform transition-shadow transition-bg duration-250 ease-in-out hover:-translate-y-1.5 hover:shadow-[0_15px_40px_rgba(31,38,135,0.7)] hover:bg-white/15"
+      onClick={handleClick}
+      className="relative flex flex-col justify-end p-8 pt-8 pb-14 min-h-[120px] max-w-xs rounded-xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_8px_32px_rgba(31,38,135,0.37)] text-gray-300 font-sans no-underline cursor-grab transition-all duration-250 ease-in-out hover:-translate-y-1.5 hover:shadow-[0_15px_40px_rgba(31,38,135,0.7)] hover:bg-white/15"
+      style={{
+        opacity: isDragging ? 0.5 : 1, // La tarjeta se vuelve semi-transparente cuando se arrastra
+      }}
     >
       <button
         onClick={handleDeleteClick}

@@ -39,6 +39,9 @@ import UpdateTaskInputDto from "@/api/tasks/interface/input/update-task.input.dt
 import UpdateTaskOutputDto from "@/api/tasks/interface/output/update-task.output.dto";
 import { updateTask } from "@/api/tasks/services/task.service";
 
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
 interface Developer {
   id: string;
   email: string;
@@ -62,6 +65,7 @@ interface Task {
 
 import DeleteDevModal from "@/components/modals/DeleteDevModal";
 import { useDebounce } from "@/hooks/useDebounce.hook";
+import { TaskStatus } from "@/api/tasks/interface/output/create-task.output.dto";
 
 const projectStatusOptions: {
   value: ProjectStatus;
@@ -151,6 +155,45 @@ export default function Page() {
   const [allDevelopers, setAllDevelopers] = useState<Developer[]>([]);
 
   const [allAvailableUsers, setAllAvailableUsers] = useState<User[]>([]);
+
+  const handleDrop = async (taskId: string, newStatus: TaskStatus) => {
+    console.log(`Tarea ${taskId} movida a ${newStatus}`);
+    // Encuentra la tarea en el estado actual
+    const taskToUpdate = tasks.find((task) => task.id === taskId);
+    if (!taskToUpdate || taskToUpdate.status === newStatus) return;
+
+    // Pre-optimista: actualiza el estado local de inmediato
+    setTasks((prevTasks) =>
+      prevTasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+
+    try {
+      // Prepara el DTO para la API
+      const updateDto: UpdateTaskInputDto = {
+        title: taskToUpdate.name,
+        points: taskToUpdate.points,
+        developmentHours: taskToUpdate.developmentHours,
+        status: newStatus,
+        developerIds: taskToUpdate.developers.map((d) => d.id),
+      };
+
+      // Llama a la API para actualizar en el backend
+      await updateTask(taskId, updateDto);
+      console.log(`Tarea ${taskId} actualizada en el backend.`);
+    } catch (error) {
+      console.error(`Error al actualizar la tarea ${taskId}:`, error);
+      // Revertir el estado si la API falla
+      setTasks((prevTasks) =>
+        prevTasks.map((t) =>
+          t.id === taskId ? { ...t, status: taskToUpdate.status } : t
+        )
+      );
+      // Reemplazar alert con un modal o mensaje de UI
+      console.log(
+        "No se pudo actualizar el estado de la tarea. Intenta nuevamente."
+      );
+    }
+  };
 
   const handleProjectStatusChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -749,7 +792,7 @@ export default function Page() {
     return <p className="p-6 text-center">No se encontró el proyecto.</p>;
 
   return (
-    <>
+    <DndProvider backend={HTML5Backend}>
       <main
         className={`p-10 min-h-screen relative font-sans bg-[#121212] text-[#e0e0e0] ${
           selectedTask || isAddDevModalOpen || isDeleteDevModalOpen
@@ -892,6 +935,7 @@ export default function Page() {
           tasks={tasks}
           onTaskClick={handleTaskClick}
           onDelete={handleDelete}
+          onDrop={handleDrop}
         />
 
         {/* Riesgos */}
@@ -914,13 +958,6 @@ export default function Page() {
 
         {/* Botones Guardar y Salir */}
         <div className="flex gap-3 mt-6 justify-end">
-          <button
-            type="button"
-            onClick={() => alert("Guardar cambios (implementar lógica)")}
-            className="px-6 py-2 rounded-md border border-white/30 bg-white/10 text-[#e0e0e0] font-semibold cursor-pointer transition-colors duration-300 ease-in-out hover:bg-white/20"
-          >
-            Guardar
-          </button>
           <button
             type="button"
             onClick={() => alert("Salir de la edición (implementar lógica)")}
@@ -1011,6 +1048,6 @@ export default function Page() {
           onClose={closeDeleteDevModal}
         />
       )}
-    </>
+    </DndProvider>
   );
 }

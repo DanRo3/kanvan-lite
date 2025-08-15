@@ -65,7 +65,7 @@ const QualityCard: React.FC<QualityCardProps> = ({
         Métricas de Calidad
       </h2>
 
-      <div className="flex flex-wrap justify-between gap-6">
+      <div className="flex flex-wrap justify-center sm:justify-between gap-6">
         {metrics.map(
           ({ title, value, key, editable: metricEditable, unit = "" }) => (
             <div
@@ -86,31 +86,40 @@ const QualityCard: React.FC<QualityCardProps> = ({
               >
                 {title}
               </span>
-              <input
-                type="number"
-                min={0}
-                step={1}
-                value={value}
-                onChange={(e) => handleInputChange(e, key)}
-                aria-label={`${title} ${editable ? "editable" : "no editable"}`}
-                onClick={(e) => {
-                  if (editable && metricEditable !== false)
-                    e.currentTarget.select();
-                }}
-                readOnly={!editable || metricEditable === false}
-                className={`
-                w-20
-                text-2xl font-extrabold text-green-400
-                text-center
-                bg-transparent border-none outline-none
-                appearance-none
-                ${
-                  !editable || metricEditable === false
-                    ? "cursor-not-allowed text-green-700/60"
-                    : "cursor-text"
-                }
-              `}
-              />
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={value}
+                  onChange={(e) => handleInputChange(e, key)}
+                  aria-label={`${title} ${
+                    editable ? "editable" : "no editable"
+                  }`}
+                  onClick={(e) => {
+                    if (editable && metricEditable !== false)
+                      e.currentTarget.select();
+                  }}
+                  readOnly={!editable || metricEditable === false}
+                  className={`
+                    w-20
+                    text-2xl font-extrabold text-green-400
+                    text-center
+                    bg-transparent border-none outline-none
+                    appearance-none
+                    ${
+                      !editable || metricEditable === false
+                        ? "cursor-not-allowed text-green-700/60"
+                        : "cursor-text"
+                    }
+                  `}
+                />
+                {unit && (
+                  <span className="text-2xl font-extrabold text-green-400 ml-1 select-none">
+                    {unit}
+                  </span>
+                )}
+              </div>
             </div>
           )
         )}
