@@ -45,7 +45,7 @@ export default function GoogleAuth() {
         if (role === "owner") {
           router.push("/main/main-frame");
         } else if (role === "developer") {
-          router.push("/developer/main-frame");
+          router.push("/dev/main-frame");
         }
       } catch (e: any) {
         console.error(
