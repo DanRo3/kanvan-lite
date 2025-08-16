@@ -18,10 +18,11 @@ interface TaskCardProps {
   developers: Developer[];
   href: string;
   onDelete: (id: string) => void;
-  onTaskClick: (task: Task) => void; // AHORA ES UNA PROP REQUERIDA
-  status: Status; // Necesitamos el estado para el `item` del drag
-  points: number; // Necesitamos los puntos para el `item` del drag
-  developmentHours: number; // Necesitamos las horas para el `item` del drag
+  onTaskClick: (task: Task) => void;
+  status: Status;
+  points: number;
+  developmentHours: number;
+  showDeleteButton?: boolean;
 }
 
 function getRandomColor(seed: string) {
@@ -43,6 +44,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   status,
   points,
   developmentHours,
+  showDeleteButton = true,
 }) => {
   const handleDeleteClick = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -86,15 +88,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
         opacity: isDragging ? 0.5 : 1, // La tarjeta se vuelve semi-transparente cuando se arrastra
       }}
     >
-      <button
-        onClick={handleDeleteClick}
-        className="absolute top-2 right-2 flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white transition-colors duration-300"
-        aria-label="Borrar tarea"
-        title="Borrar tarea"
-        type="button"
-      >
-        <FiTrash size={20} />
-      </button>
+      {showDeleteButton && (
+        <button
+          onClick={handleDeleteClick}
+          className="absolute top-2 right-2 flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 text-gray-300 hover:bg-red-600 hover:text-white transition-colors duration-300"
+          aria-label="Borrar tarea"
+          title="Borrar tarea"
+          type="button"
+        >
+          <FiTrash size={20} />
+        </button>
+      )}
 
       <div className="font-bold text-lg mb-4 break-words">{name}</div>
 

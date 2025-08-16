@@ -794,7 +794,7 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="bg-gray-800 text-gray-200 min-h-screen">
-      <TopMenu />
+      <TopMenu role="owner" />
       <div className="container mx-auto px-6 py-20">
         <DndProvider backend={HTML5Backend}>
           <main

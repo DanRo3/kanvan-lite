@@ -3,7 +3,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { FiLogOut } from "react-icons/fi";
 
-const Header = ({ onNavigate, currentPage }) => {
+const HeaderDev = ({ onNavigate, currentPage }) => {
   const router = useRouter();
 
   const handleLogout = () => {
@@ -16,17 +16,6 @@ const Header = ({ onNavigate, currentPage }) => {
       <div className="container mx-auto px-6 py-2 flex justify-end items-center">
         {/* Navigation Tabs */}
         <nav className="flex items-center space-x-4 mr-6">
-          <button
-            onClick={() => onNavigate("users")}
-            // Aplica la clase condicional para resaltar el botón activo
-            className={`transition-colors duration-200 ${
-              currentPage === "users"
-                ? "text-green-400"
-                : "text-gray-300 hover:text-green-400"
-            }`}
-          >
-            Usuarios
-          </button>
           <button
             onClick={() => onNavigate("projects")}
             // Aplica la clase condicional para resaltar el botón activo
@@ -53,4 +42,4 @@ const Header = ({ onNavigate, currentPage }) => {
   );
 };
 
-export default Header;
+export default HeaderDev;

@@ -19,40 +19,55 @@ import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('users')
 @Controller('api/users')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.OWNER)
-@ApiBearerAuth('jwt')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth('jwt')
   @ApiBody({ type: CreateUserDto })
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiBearerAuth('jwt')
   async findAllDevelopers() {
     return this.userService.findAllDevelopers();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiBearerAuth('jwt')
   async findOne(@Param('id') id: string) {
     return this.userService.findById(id);
   }
 
   @Get('project/:projectId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiBearerAuth('jwt')
   async findAllByProjectId(@Param('projectId') projectId: string) {
     return this.userService.findAllByProjectId(projectId);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth('jwt')
   @ApiBody({ type: UpdateUserDto })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth('jwt')
   async remove(@Param('id') id: string) {
     return this.userService.delete(id);
   }

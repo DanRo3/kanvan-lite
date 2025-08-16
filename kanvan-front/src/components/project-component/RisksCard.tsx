@@ -94,8 +94,7 @@ const RiskCard: React.FC<RiskCardProps> = ({
                 {label}
               </span>
 
-              {/* Botón eliminar */}
-              {onDeleteRisk && risk.id && (
+              {showAddButton && onDeleteRisk && risk.id && (
                 <button
                   onClick={() => onDeleteRisk(risk.id)}
                   aria-label="Eliminar riesgo"

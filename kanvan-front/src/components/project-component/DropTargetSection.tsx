@@ -13,6 +13,7 @@ interface DropTargetSectionProps {
   onDelete: (id: string) => void;
   onDrop: (taskId: string, newStatus: Status) => void;
   bgColor: string;
+  showDeleteButton?: boolean;
 }
 
 const DropTargetSection: React.FC<DropTargetSectionProps> = ({
@@ -23,6 +24,7 @@ const DropTargetSection: React.FC<DropTargetSectionProps> = ({
   onDelete,
   onDrop,
   bgColor,
+  showDeleteButton = true,
 }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "TASK",
@@ -50,6 +52,7 @@ const DropTargetSection: React.FC<DropTargetSectionProps> = ({
           {...task}
           onTaskClick={onTaskClick}
           onDelete={onDelete}
+          showDeleteButton={showDeleteButton}
         />
       ))}
     </section>

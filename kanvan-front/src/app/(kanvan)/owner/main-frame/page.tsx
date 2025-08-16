@@ -72,7 +72,7 @@ export default function ProjectsPage() {
       pointsDone: createdProject.pointsUsed ?? 0,
       pointsTotal: createdProject.pointsBudget ?? 0,
       dueDate: createdProject.deadline ?? null,
-      href: `/main/owner-project/${createdProject.id}`,
+      href: `/owner/project-details/${createdProject.id}`,
     };
     setProjects((prev) => [...prev, newCard]);
     closeAddProjectModal();

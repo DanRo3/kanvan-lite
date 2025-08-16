@@ -7,7 +7,8 @@ interface Developer {
   photoUrl?: string | null;
 }
 
-type Status = "green" | "yellow" | "red";
+// Actualizado para coincidir con el componente del owner
+type Status = "DEPLOYED" | "COMPLETED" | "PENDING" | "IN_PROGRESS";
 
 interface EditDetailTaskModalProps {
   taskName: string;
@@ -21,10 +22,12 @@ interface EditDetailTaskModalProps {
   onClose: () => void;
 }
 
+// Actualizado para coincidir con el componente del owner
 const statusColors: Record<Status, string> = {
-  green: "bg-green-400 text-gray-900",
-  yellow: "bg-yellow-400 text-gray-900",
-  red: "bg-red-400 text-gray-900",
+  DEPLOYED: "bg-green-400 text-gray-900",
+  COMPLETED: "bg-yellow-400 text-gray-900",
+  IN_PROGRESS: "bg-orange-700 text-gray-900",
+  PENDING: "bg-red-400 text-gray-900",
 };
 
 const EditDetailsTaskDeveloper: React.FC<EditDetailTaskModalProps> = ({
@@ -33,8 +36,6 @@ const EditDetailsTaskDeveloper: React.FC<EditDetailTaskModalProps> = ({
   developers,
   points,
   developmentHours,
-  onAddDeveloper,
-  onRemoveDeveloper,
   onSave,
   onClose,
 }) => {
@@ -80,9 +81,10 @@ const EditDetailsTaskDeveloper: React.FC<EditDetailTaskModalProps> = ({
                 ${statusColors[editableStatus]}
               `}
             >
-              <option value="green">Green</option>
-              <option value="yellow">Yellow</option>
-              <option value="red">Red</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="IN_PROGRESS">En progreso</option>
+              <option value="COMPLETED">Completado</option>
+              <option value="DEPLOYED">Desplegado</option>
             </select>
           </div>
 
@@ -187,7 +189,7 @@ const EditDetailsTaskDeveloper: React.FC<EditDetailTaskModalProps> = ({
             </div>
           </section>
 
-          {/* Botones: solo mostrar Salir */}
+          {/* Botones */}
           <div className="mt-6 flex justify-end gap-4">
             <button
               type="button"

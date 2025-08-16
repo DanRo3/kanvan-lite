@@ -3,16 +3,17 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { FiLogOut, FiArrowLeft } from "react-icons/fi";
 
-const TopMenu = ({}) => {
+const TopMenu = ({ role }) => {
   const router = useRouter();
 
   const handleLogout = () => {
     console.log("Cerrando sesión...");
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   const handleGoBack = () => {
-    router.push("/main/main-frame");
+    const path = role === "owner" ? "/main/main-frame" : "/main/main-frame-dev";
+    router.push(path);
   };
 
   return (
