@@ -29,7 +29,7 @@ function mapProjectsToCards(projects: CreateProjectOutputDto[]) {
   }));
 }
 
-export default function Page() {
+export default function ProjectsPage() {
   const [projects, setProjects] = useState<
     Array<{
       name: string;

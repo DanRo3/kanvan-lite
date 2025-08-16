@@ -43,7 +43,7 @@ export default function GoogleAuth() {
         const role = res.data.user?.role?.toLowerCase();
 
         if (role === "owner") {
-          router.push("/owner/main-frame");
+          router.push("/main/main-frame");
         } else if (role === "developer") {
           router.push("/developer/main-frame");
         }
