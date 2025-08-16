@@ -12,8 +12,8 @@ interface User {
 }
 
 interface AddProjectModalProps {
-  developers: Developer[]; // usuarios disponibles para asignar
-  onCreate: (project: any) => void; // puedes tipar si quieres mejor
+  developers: Developer[];
+  onCreate: (project: any) => void;
   onClose: () => void;
 }
 

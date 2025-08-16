@@ -66,6 +66,7 @@ interface Task {
 import DeleteDevModal from "@/components/modals/DeleteDevModal";
 import { useDebounce } from "@/hooks/useDebounce.hook";
 import { TaskStatus } from "@/api/tasks/interface/output/create-task.output.dto";
+import TopMenu from "@/components/layout/TopMenu";
 
 const projectStatusOptions: {
   value: ProjectStatus;
@@ -98,7 +99,7 @@ const mapTaskStatus = (status: number | string): Task["status"] => {
   return map[Number(status)] || "PENDING";
 };
 
-export default function Page() {
+export default function ProjectDetailsPage() {
   const params = useParams();
   const { id } = params;
 
@@ -792,262 +793,272 @@ export default function Page() {
     return <p className="p-6 text-center">No se encontró el proyecto.</p>;
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <main
-        className={`p-10 min-h-screen relative font-sans bg-[#121212] text-[#e0e0e0] ${
-          selectedTask || isAddDevModalOpen || isDeleteDevModalOpen
-            ? "filter blur-sm brightness-90 pointer-events-none select-none"
-            : ""
-        }`}
-        style={{
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        }}
-      >
-        {/* Estado y selección de proyecto */}
-        <div
-          title={`Estado: ${status.charAt(0).toUpperCase() + status.slice(1)}`}
-          className="absolute top-5 right-5 min-w-[100px] h-12 px-3 rounded-lg shadow-md flex items-center justify-center font-bold text-sm text-[#121212]"
-          style={{
-            backgroundColor: statusColors[status],
-            boxShadow: "0 0 10px rgba(0,0,0,0.5)",
-          }}
-        >
-          <select
-            aria-label="Cambiar estado del proyecto"
-            value={projectStatusLocal}
-            onChange={handleProjectStatusChange}
-            className="bg-transparent border-none outline-none cursor-pointer font-bold text-sm text-[#121212]"
-            style={{ backgroundColor: "transparent" }}
+    <div className="bg-gray-800 text-gray-200 min-h-screen">
+      <TopMenu />
+      <div className="container mx-auto px-6 py-20">
+        <DndProvider backend={HTML5Backend}>
+          <main
+            className={`p-10 min-h-screen relative font-sans bg-[#121212] text-[#e0e0e0] ${
+              selectedTask || isAddDevModalOpen || isDeleteDevModalOpen
+                ? "filter blur-sm brightness-90 pointer-events-none select-none"
+                : ""
+            }`}
+            style={{
+              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            }}
           >
-            {projectStatusOptions.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Estado y selección de proyecto */}
+            <div
+              title={`Estado: ${
+                status.charAt(0).toUpperCase() + status.slice(1)
+              }`}
+              className="absolute top-5 right-5 min-w-[100px] h-12 px-3 rounded-lg shadow-md flex items-center justify-center font-bold text-sm text-[#121212]"
+              style={{
+                backgroundColor: statusColors[status],
+                boxShadow: "0 0 10px rgba(0,0,0,0.5)",
+              }}
+            >
+              <select
+                aria-label="Cambiar estado del proyecto"
+                value={projectStatusLocal}
+                onChange={handleProjectStatusChange}
+                className="bg-transparent border-none outline-none cursor-pointer font-bold text-sm text-[#121212]"
+                style={{ backgroundColor: "transparent" }}
+              >
+                {projectStatusOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Nombre editable */}
-        <input
-          type="text"
-          value={projectName}
-          onChange={(e) => setProjectName(e.target.value)}
-          aria-label="Nombre del proyecto editable"
-          className="text-4xl font-extrabold mb-3 w-full bg-transparent border-none outline-none cursor-text text-green-400 font-sans"
-        />
-
-        {/* Fecha, puntos y descripción */}
-        <div className="flex flex-wrap gap-12 mb-3 text-gray-400 font-semibold text-lg items-start">
-          <div className="flex flex-col gap-1.5 w-44">
+            {/* Nombre editable */}
             <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              aria-label="Fecha de entrega editable"
-              className="text-lg text-[#e0e0e0] bg-transparent border border-green-400 rounded-lg px-2 py-1 cursor-text outline-none w-44 font-semibold"
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              aria-label="Nombre del proyecto editable"
+              className="text-4xl font-extrabold mb-3 w-full bg-transparent border-none outline-none cursor-text text-green-400 font-sans"
             />
-            <span>Quedan {daysRemaining} días para finalizar</span>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-center gap-1">
-              <span>Puntos obtenidos</span>
-              <input
-                type="number"
-                min={0}
-                max={pointsTotal}
-                value={pointsDone}
-                onChange={(e) => {
-                  let val = parseInt(e.target.value);
-                  if (isNaN(val)) val = 0;
-                  if (val > pointsTotal) val = pointsTotal;
-                  if (val < 0) val = 0;
-                  setPointsDone(val);
-                }}
-                aria-label="Puntos obtenidos editables"
-                className="w-14 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
-              />
+            {/* Fecha, puntos y descripción */}
+            <div className="flex flex-wrap gap-12 mb-3 text-gray-400 font-semibold text-lg items-start">
+              <div className="flex flex-col gap-1.5 w-44">
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  aria-label="Fecha de entrega editable"
+                  className="text-lg text-[#e0e0e0] bg-transparent border border-green-400 rounded-lg px-2 py-1 cursor-text outline-none w-44 font-semibold"
+                />
+                <span>Quedan {daysRemaining} días para finalizar</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center gap-1">
+                  <span>Puntos obtenidos</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={pointsTotal}
+                    value={pointsDone}
+                    onChange={(e) => {
+                      let val = parseInt(e.target.value);
+                      if (isNaN(val)) val = 0;
+                      if (val > pointsTotal) val = pointsTotal;
+                      if (val < 0) val = 0;
+                      setPointsDone(val);
+                    }}
+                    aria-label="Puntos obtenidos editables"
+                    className="w-14 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
+                  />
+                </div>
+                <div className="font-bold text-lg text-gray-400 select-none pb-6">
+                  {" "}
+                  /{" "}
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span>Puntos totales</span>
+                  <input
+                    type="number"
+                    min={pointsDone}
+                    value={pointsTotal}
+                    onChange={(e) => {
+                      let val = parseInt(e.target.value);
+                      if (isNaN(val)) val = 0;
+                      if (val < pointsDone) val = pointsDone;
+                      setPointsTotal(val);
+                    }}
+                    aria-label="Puntos totales editables"
+                    className="w-14 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-1.5 text-cyan-300 font-semibold text-sm text-center w-[372px] ml-12">
+                Faltan {pointsTotal - pointsDone} puntos para completar el
+                proyecto
+              </div>
             </div>
-            <div className="font-bold text-lg text-gray-400 select-none pb-6">
-              {" "}
-              /{" "}
+
+            {/* Desarrolladores */}
+            <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
+              Desarrolladores
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <span>Puntos totales</span>
-              <input
-                type="number"
-                min={pointsDone}
-                value={pointsTotal}
-                onChange={(e) => {
-                  let val = parseInt(e.target.value);
-                  if (isNaN(val)) val = 0;
-                  if (val < pointsDone) val = pointsDone;
-                  setPointsTotal(val);
-                }}
-                aria-label="Puntos totales editables"
-                className="w-14 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
-              />
+            <ProjectAvatars
+              developers={developers}
+              showButtons={true}
+              onAdd={openAddDevModal}
+              onRemove={openDeleteDevModal}
+            />
+
+            {/* Descripción del Proyecto */}
+            <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
+              Descripción del Proyecto
             </div>
-          </div>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={8}
+              aria-label="Descripción editable del proyecto"
+              className="mt-2 w-full bg-white/5 border border-green-400 rounded-xl text-[#e0e0e0] text-base p-3 font-sans resize-y min-h-[150px] outline-none"
+            />
 
-          <div className="mt-1.5 text-cyan-300 font-semibold text-sm text-center w-[372px] ml-12">
-            Faltan {pointsTotal - pointsDone} puntos para completar el proyecto
-          </div>
-        </div>
+            {/* Botón nueva tarea */}
+            <div className="flex justify-start mt-6 mb-3">
+              <button
+                type="button"
+                aria-label="Crear nueva tarea"
+                onClick={openAddTaskModal}
+                className="px-6 py-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-md text-[#e0e0e0] font-semibold cursor-pointer shadow-[0_8px_32px_rgba(31,38,135,0.37)] transition duration-300 ease-in-out hover:bg-white/20 hover:shadow-[0_10px_40px_rgba(31,38,135,0.6)] select-none whitespace-nowrap"
+              >
+                + Nueva Tarea
+              </button>
+            </div>
 
-        {/* Desarrolladores */}
-        <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
-          Desarrolladores
-        </div>
-        <ProjectAvatars
-          developers={developers}
-          showButtons={true}
-          onAdd={openAddDevModal}
-          onRemove={openDeleteDevModal}
-        />
+            {/* Componente tareas con función delete */}
+            <ProjectTasksPage
+              tasks={tasks}
+              onTaskClick={handleTaskClick}
+              onDelete={handleDelete}
+              onDrop={handleDrop}
+            />
 
-        {/* Descripción del Proyecto */}
-        <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
-          Descripción del Proyecto
-        </div>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={8}
-          aria-label="Descripción editable del proyecto"
-          className="mt-2 w-full bg-white/5 border border-green-400 rounded-xl text-[#e0e0e0] text-base p-3 font-sans resize-y min-h-[150px] outline-none"
-        />
+            {/* Riesgos */}
+            <RiskCard
+              risks={risks}
+              showAddButton={true}
+              onAddRisk={openAddRiskModal}
+              onDeleteRisk={handleDeleteRisk}
+            />
 
-        {/* Botón nueva tarea */}
-        <div className="flex justify-start mt-6 mb-3">
-          <button
-            type="button"
-            aria-label="Crear nueva tarea"
-            onClick={openAddTaskModal}
-            className="px-6 py-2 rounded-xl border border-white/20 bg-white/10 backdrop-blur-md text-[#e0e0e0] font-semibold cursor-pointer shadow-[0_8px_32px_rgba(31,38,135,0.37)] transition duration-300 ease-in-out hover:bg-white/20 hover:shadow-[0_10px_40px_rgba(31,38,135,0.6)] select-none whitespace-nowrap"
-          >
-            + Nueva Tarea
-          </button>
-        </div>
+            {/* Calidad */}
+            <QualityCard
+              editable={true}
+              criticalBugs={criticalBugs}
+              normalBugs={normalBugs}
+              lowBugs={lowBugs}
+              testsCoberage={testsCoberage}
+              onMetricChange={handleQualityMetricChange}
+            />
 
-        {/* Componente tareas con función delete */}
-        <ProjectTasksPage
-          tasks={tasks}
-          onTaskClick={handleTaskClick}
-          onDelete={handleDelete}
-          onDrop={handleDrop}
-        />
+            {/* Botones Guardar y Salir */}
+            <div className="flex gap-3 mt-6 justify-end">
+              <button
+                type="button"
+                onClick={() =>
+                  alert("Salir de la edición (implementar lógica)")
+                }
+                className="px-6 py-2 rounded-md border border-white/30 bg-white/10 text-[#e0e0e0] font-semibold cursor-pointer transition-colors duration-300 ease-in-out hover:bg-white/20"
+              >
+                Salir
+              </button>
+            </div>
+          </main>
 
-        {/* Riesgos */}
-        <RiskCard
-          risks={risks}
-          showAddButton={true}
-          onAddRisk={openAddRiskModal}
-          onDeleteRisk={handleDeleteRisk}
-        />
+          {/* Modal editar tarea */}
+          {selectedTask && (
+            <EditDetailTaskModal
+              taskName={selectedTask.name}
+              status={selectedTask.status}
+              developers={selectedTask.developers}
+              points={selectedTask.points}
+              developmentHours={selectedTask.developmentHours}
+              allAvailableUsers={allAvailableUsers}
+              onAddDeveloper={() => {}}
+              onRemoveDeveloper={openDeleteDevModalForTask}
+              onSave={handleSaveTaskFromModal}
+              onClose={closeModal}
+            />
+          )}
 
-        {/* Calidad */}
-        <QualityCard
-          editable={true}
-          criticalBugs={criticalBugs}
-          normalBugs={normalBugs}
-          lowBugs={lowBugs}
-          testsCoberage={testsCoberage}
-          onMetricChange={handleQualityMetricChange}
-        />
+          {/* Modal para eliminar dev de la tarea */}
+          {isDeleteDevModalOpenForTask && selectedTask && (
+            <DeleteDevModal
+              developers={selectedTask.developers}
+              onRemoveUser={handleRemoveDeveloperFromTask}
+              onClose={closeDeleteDevModalForTask}
+            />
+          )}
 
-        {/* Botones Guardar y Salir */}
-        <div className="flex gap-3 mt-6 justify-end">
-          <button
-            type="button"
-            onClick={() => alert("Salir de la edición (implementar lógica)")}
-            className="px-6 py-2 rounded-md border border-white/30 bg-white/10 text-[#e0e0e0] font-semibold cursor-pointer transition-colors duration-300 ease-in-out hover:bg-white/20"
-          >
-            Salir
-          </button>
-        </div>
-      </main>
+          {/* Modal para eliminar dev del proyecto */}
+          {isDeleteDevModalOpenForProject && (
+            <DeleteDevModal
+              developers={developers}
+              onRemoveUser={handleRemoveUserFromProject}
+              onClose={closeDeleteDevModalForProject}
+            />
+          )}
 
-      {/* Modal editar tarea */}
-      {selectedTask && (
-        <EditDetailTaskModal
-          taskName={selectedTask.name}
-          status={selectedTask.status}
-          developers={selectedTask.developers}
-          points={selectedTask.points}
-          developmentHours={selectedTask.developmentHours}
-          allAvailableUsers={allAvailableUsers}
-          onAddDeveloper={() => {}}
-          onRemoveDeveloper={openDeleteDevModalForTask}
-          onSave={handleSaveTaskFromModal}
-          onClose={closeModal}
-        />
-      )}
+          {/* Modal añadir riesgo */}
+          {isAddRiskModalOpen && (
+            <AddRiskModal
+              scopes={scopesList}
+              onSave={handleAddRisk}
+              onClose={closeAddRiskModal}
+            />
+          )}
 
-      {/* Modal para eliminar dev de la tarea */}
-      {isDeleteDevModalOpenForTask && selectedTask && (
-        <DeleteDevModal
-          developers={selectedTask.developers}
-          onRemoveUser={handleRemoveDeveloperFromTask}
-          onClose={closeDeleteDevModalForTask}
-        />
-      )}
+          {/* Modal añadir tarea */}
+          {isAddTaskModalOpen && (
+            <AddTaskModal
+              developers={developers}
+              onCreate={handleCreateTask}
+              onClose={closeAddTaskModal}
+            />
+          )}
 
-      {/* Modal para eliminar dev del proyecto */}
-      {isDeleteDevModalOpenForProject && (
-        <DeleteDevModal
-          developers={developers}
-          onRemoveUser={handleRemoveUserFromProject}
-          onClose={closeDeleteDevModalForProject}
-        />
-      )}
+          {/* Modal añadir desarrollador */}
+          {isAddDevModalOpen && (
+            <AddDevModal
+              users={availableDevelopersToAdd}
+              onAddUser={handleAddUserToProject}
+              onClose={closeAddDevModal}
+            />
+          )}
 
-      {/* Modal añadir riesgo */}
-      {isAddRiskModalOpen && (
-        <AddRiskModal
-          scopes={scopesList}
-          onSave={handleAddRisk}
-          onClose={closeAddRiskModal}
-        />
-      )}
+          {isDeleteDevModalOpen && selectedTask && (
+            <DeleteDevModal
+              developers={selectedTask.developers}
+              onRemoveUser={async (user) => {
+                // Elimina el developer en backend y actualiza estados
+                await handleRemoveDeveloperFromTask(user);
+              }}
+              onClose={() => setIsDeleteDevModalOpen(false)}
+            />
+          )}
 
-      {/* Modal añadir tarea */}
-      {isAddTaskModalOpen && (
-        <AddTaskModal
-          developers={developers}
-          onCreate={handleCreateTask}
-          onClose={closeAddTaskModal}
-        />
-      )}
-
-      {/* Modal añadir desarrollador */}
-      {isAddDevModalOpen && (
-        <AddDevModal
-          users={availableDevelopersToAdd}
-          onAddUser={handleAddUserToProject}
-          onClose={closeAddDevModal}
-        />
-      )}
-
-      {isDeleteDevModalOpen && selectedTask && (
-        <DeleteDevModal
-          developers={selectedTask.developers}
-          onRemoveUser={async (user) => {
-            // Elimina el developer en backend y actualiza estados
-            await handleRemoveDeveloperFromTask(user);
-          }}
-          onClose={() => setIsDeleteDevModalOpen(false)}
-        />
-      )}
-
-      {/* Modal eliminar desarrollador */}
-      {isDeleteDevModalOpen && (
-        <DeleteDevModal
-          developers={developers}
-          onRemoveUser={handleRemoveUserFromProject}
-          onClose={closeDeleteDevModal}
-        />
-      )}
-    </DndProvider>
+          {/* Modal eliminar desarrollador */}
+          {isDeleteDevModalOpen && (
+            <DeleteDevModal
+              developers={developers}
+              onRemoveUser={handleRemoveUserFromProject}
+              onClose={closeDeleteDevModal}
+            />
+          )}
+        </DndProvider>
+      </div>
+    </div>
   );
 }
