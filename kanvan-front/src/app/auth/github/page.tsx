@@ -23,9 +23,28 @@ export default function GithubAuth() {
       try {
         const res = await axios.post("http://localhost:3001/auth/github", {
           code,
+          redirectUri: "http://localhost:3000/auth/github/",
         });
+
         console.log("Respuesta backend GitHub:", res.data);
         setResult(res.data);
+
+        // Almacena el token de acceso en localStorage
+        if (res.data?.accessToken) {
+          localStorage.setItem("accessToken", res.data.accessToken);
+        }
+
+        if (res.data?.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        }
+
+        const role = res.data.user?.role?.toLowerCase();
+
+        if (role === "owner") {
+          router.push("/main/main-frame");
+        } else if (role === "developer") {
+          router.push("/main/main-frame-dev");
+        }
       } catch (e: any) {
         console.error(
           "Error al autenticar con backend:",
@@ -36,7 +55,7 @@ export default function GithubAuth() {
     }
 
     login();
-  }, [code]);
+  }, [code, router]);
 
   return (
     <div
@@ -70,9 +89,7 @@ export default function GithubAuth() {
               value={result.accessToken}
             />
           </p>
-          <Link href="/">
-            <a>Volver al inicio</a>
-          </Link>
+          <Link href="/">Volver al inicio</Link>
         </div>
       )}
 
