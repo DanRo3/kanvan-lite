@@ -1,23 +1,30 @@
 "use client";
 import React from "react";
 
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+}
+
 interface ProjectProgressSummaryProps {
-  desarrollado: number; // porcentaje
-  desplegado: number; // porcentaje
-  tareasCompletadas: number;
-  tareasTotales: number;
+  tasks: Task[];
+  pointsBudget: number;
+  pointsUsed: number;
 }
 
 const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
-  desarrollado,
-  desplegado,
-  tareasCompletadas,
-  tareasTotales,
+  tasks,
+  pointsBudget,
+  pointsUsed,
 }) => {
-  const porcentajeCompletado =
-    tareasTotales > 0
-      ? ((tareasCompletadas / tareasTotales) * 100).toFixed(2)
-      : "0.00";
+  const completedTasks = tasks.filter((t) => t.status === "COMPLETED").length;
+  const deployedTasks = tasks.filter((t) => t.status === "DEPLOYED").length;
+  const totalTasks = tasks.length;
+
+  const devPercent = (completedTasks + deployedTasks / totalTasks) * 100;
+  const deployedPercent = (deployedTasks / totalTasks) * 100;
+  const projectPercent = (pointsUsed / pointsBudget) * 100;
 
   return (
     <section
@@ -40,7 +47,7 @@ const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
             Desarrollado
           </span>
           <span className="text-3xl font-extrabold text-green-400">
-            {desarrollado}%
+            {devPercent}%
           </span>
         </div>
 
@@ -49,7 +56,7 @@ const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
             Desplegado
           </span>
           <span className="text-3xl font-extrabold text-cyan-400">
-            {desplegado}%
+            {deployedPercent}%
           </span>
         </div>
 
@@ -58,7 +65,7 @@ const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
             Tareas Completadas
           </span>
           <span className="text-2xl font-extrabold">
-            {tareasCompletadas} / {tareasTotales}
+            {deployedTasks} / {totalTasks}
           </span>
         </div>
 
@@ -67,7 +74,7 @@ const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
             % Proyecto Completado
           </span>
           <span className="text-3xl font-extrabold text-yellow-400">
-            {porcentajeCompletado}%
+            {projectPercent}%
           </span>
         </div>
       </div>

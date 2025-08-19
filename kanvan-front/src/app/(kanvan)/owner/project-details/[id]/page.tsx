@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import Risk from "@/api/risks/interface/input/risk.input.dto";
 import RiskCard from "@/components/project-component/RisksCard";
@@ -156,6 +156,12 @@ export default function ProjectDetailsPage() {
   const [allDevelopers, setAllDevelopers] = useState<Developer[]>([]);
 
   const [allAvailableUsers, setAllAvailableUsers] = useState<User[]>([]);
+
+  const router = useRouter();
+
+  const handleSummaryClick = () => {
+    router.push(`/client/${projectData?.publicId}`);
+  };
 
   const handleDrop = async (taskId: string, newStatus: Status) => {
     console.log(`Tarea ${taskId} movida a ${newStatus}`);
@@ -963,16 +969,13 @@ export default function ProjectDetailsPage() {
               onMetricChange={handleQualityMetricChange}
             />
 
-            {/* Botones Guardar y Salir */}
             <div className="flex gap-3 mt-6 justify-end">
               <button
                 type="button"
-                onClick={() =>
-                  alert("Salir de la edición (implementar lógica)")
-                }
+                onClick={handleSummaryClick}
                 className="px-6 py-2 rounded-md border border-white/30 bg-white/10 text-[#e0e0e0] font-semibold cursor-pointer transition-colors duration-300 ease-in-out hover:bg-white/20"
               >
-                Salir
+                Ver Resumen
               </button>
             </div>
           </main>

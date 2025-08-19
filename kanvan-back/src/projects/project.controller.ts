@@ -48,6 +48,11 @@ export class ProjectsController {
     return this.projectsService.findById(id);
   }
 
+  @Get('publicId/:publicId')
+  findByPublicId(@Param('publicId') publicId: string) {
+    return this.projectsService.findByPublicId(publicId);
+  }
+
   @Patch(':id')
   @ApiBearerAuth('jwt')
   @UseGuards(JwtAuthGuard, RolesGuard)

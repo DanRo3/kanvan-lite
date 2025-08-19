@@ -2,12 +2,17 @@
 "use client";
 import React from "react";
 
-const QualitySummaryCard: React.FC = () => {
-  // Datos de ejemplo - podrías recibir estas props o extraer tu estado
-  const bugsCriticos = 3;
-  const bugsTotales = 15;
-  const coberturaTests = 78; // porcentaje
+interface QualitySummaryProps {
+  criticalBugs: number;
+  totalBugs: number;
+  testsCoberage: number;
+}
 
+const QualitySummaryCard: React.FC<QualitySummaryProps> = ({
+  criticalBugs,
+  totalBugs,
+  testsCoberage,
+}) => {
   return (
     <section
       className="
@@ -27,7 +32,7 @@ const QualitySummaryCard: React.FC = () => {
             Bugs Críticos
           </span>
           <span className="text-2xl font-extrabold text-red-500">
-            {bugsCriticos}
+            {criticalBugs}
           </span>
         </div>
         <div className="flex-1 min-w-[140px] bg-white/15 rounded-lg p-5 shadow-[0_8px_32px_rgba(31,38,135,0.37)] flex flex-col items-center justify-center">
@@ -35,7 +40,7 @@ const QualitySummaryCard: React.FC = () => {
             Bugs Totales
           </span>
           <span className="text-2xl font-extrabold text-yellow-400">
-            {bugsTotales}
+            {totalBugs}
           </span>
         </div>
         <div className="flex-1 min-w-[140px] bg-white/15 rounded-lg p-5 shadow-[0_8px_32px_rgba(31,38,135,0.37)] flex flex-col items-center justify-center">
@@ -43,7 +48,7 @@ const QualitySummaryCard: React.FC = () => {
             Cobertura de Tests
           </span>
           <span className="text-2xl font-extrabold text-green-400">
-            {coberturaTests}%
+            {testsCoberage}%
           </span>
         </div>
       </div>

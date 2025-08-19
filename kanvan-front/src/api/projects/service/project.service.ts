@@ -28,6 +28,19 @@ export const getProjectById = async (
   }
 };
 
+export const getProjectByPublicId = async (
+  id: string
+): Promise<CreateProjectOutputDto> => {
+  try {
+    const response = await api.get<CreateProjectOutputDto>(
+      `${BASE_PATH}/publicId/${id}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const createProject = async (
   projectData: CreateProjectInputDto
 ): Promise<CreateProjectOutputDto> => {
