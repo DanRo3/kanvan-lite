@@ -85,18 +85,18 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
           dueDate: apiData.deadline, // <-- Corregido: 'deadline' se mapea a 'dueDate'
           tasks: apiData.tasks.map((task) => ({
             id: task.id,
-            name: task.title,
+            title: task.title,
             status: task.status,
             fechaFinalizacion: task.updatedAt,
           })),
           totalTasks: apiData.tasks.length,
           recentTasks: apiData.tasks || [],
           risks: apiData.risks || [],
-          criticalBugs: apiData.criticalBugs, // Mapea la propiedad del backend
+          criticalBugs: apiData.criticalBugs,
           normalBugs: apiData.normalBugs,
           lowBugs: apiData.lowBugs,
           totalBugs:
-            apiData.criticalBugs + apiData.normalBugs + apiData.lowBugs, // Calcula el total de bugs
+            apiData.criticalBugs + apiData.normalBugs + apiData.lowBugs,
           testsCoberage: apiData.testsCoberage,
           pointsBudget: apiData.pointsBudget,
           pointsUsed: apiData.pointsUsed,

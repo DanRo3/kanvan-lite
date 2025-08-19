@@ -1,6 +1,9 @@
 // src/components/project-component/TaskSummaryTable.tsx
-import React from "react";
 
+import React, { useState } from "react";
+import TaskRowDetails from "./TaskRowDetails";
+
+// Interfaz para la estructura de una tarea
 interface Task {
   id: string;
   title: string;
@@ -12,11 +15,26 @@ interface TaskSummaryTableProps {
 }
 
 const TaskSummaryTable: React.FC<TaskSummaryTableProps> = ({ tasks }) => {
-  // 1. Filtra y cuenta las tareas para cada estado
-  const planned = tasks.filter((t) => t.status === "PENDING").length;
-  const inProgress = tasks.filter((t) => t.status === "IN_PROGRESS").length;
-  const completed = tasks.filter((t) => t.status === "COMPLETED").length;
-  const deployed = tasks.filter((t) => t.status === "DEPLOYED").length;
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  const handleRowClick = (status: string) => {
+    setExpandedRow(expandedRow === status ? null : status);
+  };
+
+  // Mapeo de estados para la traducción
+  const statusMap: Record<string, string> = {
+    PENDING: "Planificadas",
+    IN_PROGRESS: "En Progreso",
+    COMPLETED: "Completadas",
+    DEPLOYED: "Desplegadas",
+  };
+
+  // Filtra y cuenta las tareas para cada estado
+  const taskCounts = Object.keys(statusMap).reduce((acc, status) => {
+    acc[status] = tasks.filter((t) => t.status === status).length;
+    return acc;
+  }, {} as Record<string, number>);
+
   const total = tasks.length;
 
   return (
@@ -30,30 +48,26 @@ const TaskSummaryTable: React.FC<TaskSummaryTableProps> = ({ tasks }) => {
         </tr>
       </thead>
       <tbody>
-        <tr className="bg-white/5 hover:bg-white/10 transition">
-          <td className="px-6 py-3 border-b border-gray-700">Planificadas</td>
-          <td className="px-6 py-3 border-b border-gray-700 text-right">
-            {planned}
-          </td>
-        </tr>
-        <tr className="bg-white/5 hover:bg-white/10 transition">
-          <td className="px-6 py-3 border-b border-gray-700">En Progreso</td>
-          <td className="px-6 py-3 border-b border-gray-700 text-right">
-            {inProgress}
-          </td>
-        </tr>
-        <tr className="bg-white/5 hover:bg-white/10 transition">
-          <td className="px-6 py-3 border-b border-gray-700">Completadas</td>
-          <td className="px-6 py-3 border-b border-gray-700 text-right">
-            {completed}
-          </td>
-        </tr>
-        <tr className="bg-white/5 hover:bg-white/10 transition">
-          <td className="px-6 py-3 border-b border-gray-700">Desplegadas</td>
-          <td className="px-6 py-3 border-b border-gray-700 text-right">
-            {deployed}
-          </td>
-        </tr>
+        {Object.entries(statusMap).map(([status, label]) => (
+          <React.Fragment key={status}>
+            <tr
+              className="bg-white/5 hover:bg-white/10 transition cursor-pointer"
+              onClick={() => handleRowClick(status)}
+            >
+              <td className="px-6 py-3 border-b border-gray-700">{label}</td>
+              <td className="px-6 py-3 border-b border-gray-700 text-right">
+                {taskCounts[status]}
+              </td>
+            </tr>
+            {expandedRow === status && (
+              <tr className="bg-white/5">
+                <TaskRowDetails
+                  tasks={tasks.filter((t) => t.status === status)}
+                />
+              </tr>
+            )}
+          </React.Fragment>
+        ))}
         <tr className="bg-white/10 font-bold">
           <td className="px-6 py-3">Totales</td>
           <td className="px-6 py-3 text-right">{total}</td>
