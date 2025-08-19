@@ -3,7 +3,7 @@
 import React from "react";
 import { format } from "date-fns";
 
-// Interfaz para la estructura de una tarea, replicando la de tu página principal
+// Interfaz para la estructura de una tarea
 interface Task {
   id: string;
   title: string;
@@ -19,6 +19,14 @@ interface RecentActivityCardProps {
 const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   recentTasks,
 }) => {
+  // Mapeo de estados para la traducción
+  const statusMap: Record<string, string> = {
+    PENDING: "Planificada",
+    IN_PROGRESS: "En Progreso",
+    COMPLETED: "Completada",
+    DEPLOYED: "Desplegada",
+  };
+
   return (
     <section
       className="
@@ -32,31 +40,45 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         Actividad Reciente
       </h2>
 
-      {/* Contenedor de la lista de actividades */}
-      <div className="mt-3 max-h-52 overflow-y-auto flex flex-col gap-3 pr-3">
-        {recentTasks.length === 0 && (
-          <p className="text-[#c2c2c2] italic">
-            No hay actividad reciente registrada.
-          </p>
-        )}
-
-        {recentTasks.slice(0, 5).map((task) => (
-          <div
-            key={task.id}
-            className="
-              flex items-center gap-3
-              p-3 rounded-lg
-              bg-white/7
-            "
-          >
-            <span className="flex-1 text-[#e0e0e0] truncate">
-              <span className="font-semibold">{task.title}</span> -{" "}
-              {task.status} (finalizada el{" "}
-              {format(new Date(task.updatedAt), "dd/MM/yyyy")})
-            </span>
-          </div>
-        ))}
-      </div>
+      {recentTasks.length === 0 ? (
+        <p className="text-[#c2c2c2] italic">
+          No hay actividad reciente registrada.
+        </p>
+      ) : (
+        <div className="mt-3 max-h-52 overflow-y-auto pr-3">
+          <table className="min-w-full table-fixed divide-y divide-white/20">
+            <thead className="bg-white/10 sticky top-0">
+              <tr>
+                <th className="w-1/2 py-2 px-4 text-left text-sm font-semibold text-[#c2c2c2]">
+                  Título
+                </th>
+                <th className="w-1/4 py-2 px-4 text-left text-sm font-semibold text-[#c2c2c2]">
+                  Estado
+                </th>
+                <th className="w-1/4 py-2 px-4 text-left text-sm font-semibold text-[#c2c2c2]">
+                  Finalización
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {recentTasks.slice(0, 5).map((task) => (
+                <tr key={task.id} className="hover:bg-white/10">
+                  <td className="py-2 px-4 text-sm text-[#e0e0e0] truncate">
+                    {task.title}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-[#e0e0e0]">
+                    {/* Usa el mapa para traducir el estado */}
+                    {statusMap[task.status.toUpperCase()] || task.status}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-[#e0e0e0]">
+                    {format(new Date(task.updatedAt), "dd/MM/yyyy")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 };

@@ -33,23 +33,32 @@ const InfoBox: React.FC<{
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const statusMap: Record<string, { bgColor: string; textColor: string }> = {
-    green: { bgColor: "bg-green-600", textColor: "text-green-100" },
-    yellow: { bgColor: "bg-yellow-500", textColor: "text-yellow-900" },
-    red: { bgColor: "bg-red-600", textColor: "text-red-100" },
-    "en progreso": { bgColor: "bg-yellow-500", textColor: "text-yellow-900" },
+    // Nuevos mapeos basados en los estados de la API
+    PLANNED: { bgColor: "bg-red-600", textColor: "text-red-100" },
+    IN_PROGRESS: { bgColor: "bg-yellow-500", textColor: "text-yellow-900" },
+    COMPLETED: { bgColor: "bg-green-600", textColor: "text-green-100" },
   };
 
-  const colors = statusMap[status.toLowerCase()] ?? {
+  const colors = statusMap[status.toUpperCase()] ?? {
     bgColor: "bg-gray-700",
     textColor: "text-gray-300",
   };
 
+  // Mapear el nombre del estado para mostrarlo
+  const displayStatus: Record<string, string> = {
+    PLANNED: "Planificado",
+    IN_PROGRESS: "En Progreso",
+    COMPLETED: "Completado",
+  };
+
+  const statusText = displayStatus[status.toUpperCase()] ?? status;
+
   return (
     <div
       className={`${colors.bgColor} ${colors.textColor} inline-block px-3 py-1 rounded-md font-semibold text-sm select-none`}
-      aria-label={`Estado del proyecto: ${status}`}
+      aria-label={`Estado del proyecto: ${statusText}`}
     >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {statusText}
     </div>
   );
 };
@@ -91,6 +100,7 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
           testsCoberage: apiData.testsCoberage,
           pointsBudget: apiData.pointsBudget,
           pointsUsed: apiData.pointsUsed,
+          description: apiData.description,
         };
 
         setProjectData(formattedData);
@@ -184,6 +194,13 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
             {projectData.projectName || "Cargando nombre..."}
           </div>
         </div>
+
+        <div className="mt-6 mb-2 font-semibold text-lg text-gray-400">
+          Descripción del Proyecto
+        </div>
+        <p className="mt-2 mb-4 w-full bg-white/5 border border-green-400 rounded-xl text-[#e0e0e0] text-base p-3 font-sans resize-y min-h-[150px]">
+          {projectData.description ?? ""}
+        </p>
 
         <div className="flex gap-6 mb-8">
           <InfoBox title="Fecha límite" content={formattedDueDate} />
