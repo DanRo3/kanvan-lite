@@ -159,6 +159,33 @@ export default function ProjectDetailsPage() {
 
   const router = useRouter();
 
+  const [copied, setCopied] = useState(false); // <--- Estado para la notificación
+  // ... (otros estados y refs) ...
+
+  // ... (tu useEffect para cargar projectData) ...
+
+  const handleCopyLink = () => {
+    // Verificar que projectData y su publicId existen
+    if (!projectData?.publicId) {
+      console.error("ID del proyecto no disponible.");
+      return;
+    }
+
+    const projectUrl = `${window.location.origin}/client/${projectData.publicId}`;
+
+    navigator.clipboard
+      .writeText(projectUrl)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 3000);
+      })
+      .catch((err) => {
+        console.error("Error al copiar el enlace:", err);
+      });
+  };
+
   const handleSummaryClick = () => {
     router.push(`/client/${projectData?.publicId}`);
   };
@@ -690,6 +717,8 @@ export default function ProjectDetailsPage() {
   const closeAddDevModal = () => setIsAddDevModalOpen(false);
   const closeModal = () => setSelectedTask(null);
 
+  // En ProjectDetailsPage.tsx
+
   const handleSaveTaskFromModal = async (updatedData: {
     taskName: string;
     points: number;
@@ -719,11 +748,12 @@ export default function ProjectDetailsPage() {
                 name: updatedTask.title,
                 points: updatedTask.points,
                 developmentHours: updatedTask.developmentHours ?? 0,
-                status: updatedTask.status,
+                status: mapTaskStatus(updatedTask.status), // Mapea el status de la API
+                // ¡Solución! Mapea a partir de los datos del backend, sin sobrescribir photoUrl
                 developers: updatedTask.developers.map((d) => ({
                   id: d.id,
                   email: d.email,
-                  photoUrl: null,
+                  photoUrl: d.photoUrl ?? null,
                 })),
               }
             : task
@@ -977,6 +1007,21 @@ export default function ProjectDetailsPage() {
               >
                 Ver Resumen
               </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="px-6 py-2 rounded-md border border-white/30 bg-white/10 text-[#e0e0e0] font-semibold cursor-pointer transition-colors duration-300 ease-in-out hover:bg-white/20"
+                >
+                  Compartir Proyecto
+                </button>
+                {copied && (
+                  <div className="fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white text-sm rounded-full shadow-lg transition-opacity duration-300 ease-in-out opacity-100 z-50">
+                    Enlace copiado en portapapeles
+                  </div>
+                )}
+              </div>
             </div>
           </main>
 

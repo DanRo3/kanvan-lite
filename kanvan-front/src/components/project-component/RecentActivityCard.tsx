@@ -1,9 +1,6 @@
-// src/components/project-component/RecentActivityCard.tsx
-
 import React from "react";
 import { format } from "date-fns";
 
-// Interfaz para la estructura de una tarea
 interface Task {
   id: string;
   title: string;
@@ -11,7 +8,6 @@ interface Task {
   updatedAt: string;
 }
 
-// Interfaz para los props del componente
 interface RecentActivityCardProps {
   recentTasks: Task[];
 }
@@ -19,13 +15,22 @@ interface RecentActivityCardProps {
 const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   recentTasks,
 }) => {
-  // Mapeo de estados para la traducción
   const statusMap: Record<string, string> = {
     PENDING: "Planificada",
     IN_PROGRESS: "En Progreso",
     COMPLETED: "Completada",
     DEPLOYED: "Desplegada",
   };
+
+  // Ordena las tareas por fecha en orden descendente y toma las 5 más recientes
+  const sortedTasks = [...recentTasks]
+    .sort((a, b) => {
+      // Convierte las fechas a objetos Date para una comparación precisa
+      const dateA = new Date(a.updatedAt);
+      const dateB = new Date(b.updatedAt);
+      return dateB.getTime() - dateA.getTime();
+    })
+    .slice(0, 5);
 
   return (
     <section
@@ -40,7 +45,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         Actividad Reciente
       </h2>
 
-      {recentTasks.length === 0 ? (
+      {sortedTasks.length === 0 ? (
         <p className="text-[#c2c2c2] italic">
           No hay actividad reciente registrada.
         </p>
@@ -61,13 +66,12 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {recentTasks.slice(0, 5).map((task) => (
+              {sortedTasks.map((task) => (
                 <tr key={task.id} className="hover:bg-white/10">
                   <td className="py-2 px-4 text-sm text-[#e0e0e0] truncate">
                     {task.title}
                   </td>
                   <td className="py-2 px-4 text-sm text-[#e0e0e0]">
-                    {/* Usa el mapa para traducir el estado */}
                     {statusMap[task.status.toUpperCase()] || task.status}
                   </td>
                   <td className="py-2 px-4 text-sm text-[#e0e0e0]">

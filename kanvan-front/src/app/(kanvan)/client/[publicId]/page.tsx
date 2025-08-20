@@ -11,7 +11,7 @@ export default function DocumentClientPage({
   const publicId = resolvedParams.publicId;
 
   return (
-    <div>
+    <div className="bg-gray-800 text-gray-200 min-h-screen">
       <DocumentClient publicId={publicId} />
     </div>
   );
