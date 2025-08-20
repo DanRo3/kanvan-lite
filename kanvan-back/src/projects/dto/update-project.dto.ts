@@ -31,7 +31,7 @@ export class UpdateProjectDto extends PartialType(CreateProjectDto) {
   deadline?: Date;
 
   @IsInt()
-  //@Min(1)
+  @Min(1)
   @ApiProperty()
   @IsOptional()
   @ApiProperty({ required: false, nullable: true })

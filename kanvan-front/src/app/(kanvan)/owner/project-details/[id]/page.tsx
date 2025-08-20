@@ -283,12 +283,14 @@ export default function ProjectDetailsPage() {
         ? new Date(debouncedDueDate).toISOString()
         : undefined;
 
+    const pointsBudgetForApi = safePointsTotal === 0 ? 1 : safePointsTotal;
+
     const updateDto = {
       name: debouncedProjectName.trim() || projectData.name,
       description: debouncedDescription || "",
       status: debouncedProjectStatus,
       deadline: safeDeadline,
-      pointsBudget: safePointsTotal,
+      pointsBudget: pointsBudgetForApi,
       pointsUsed: safePointsDone,
       criticalBugs: debouncedCriticalBugs,
       normalBugs: debouncedNormalBugs,
@@ -888,7 +890,11 @@ export default function ProjectDetailsPage() {
                   aria-label="Fecha de entrega editable"
                   className="text-lg text-[#e0e0e0] bg-transparent border border-green-400 rounded-lg px-2 py-1 cursor-text outline-none w-44 font-semibold"
                 />
-                <span>Quedan {daysRemaining} días para finalizar</span>
+                <span>
+                  {daysRemaining === 1 ? "Queda" : "Quedan"} {daysRemaining}{" "}
+                  {daysRemaining === 1 ? "día" : "días"} para finalizar el
+                  proyecto
+                </span>
               </div>
 
               <div className="flex items-center gap-3">
@@ -918,12 +924,13 @@ export default function ProjectDetailsPage() {
                   <span>Puntos totales</span>
                   <input
                     type="number"
-                    min={pointsDone}
+                    min={1} // ¡Este atributo HTML es clave!
                     value={pointsTotal}
                     onChange={(e) => {
                       let val = parseInt(e.target.value);
-                      if (isNaN(val)) val = 0;
+                      if (isNaN(val)) val = 1; // Si no es un número, establece 1 como valor por defecto
                       if (val < pointsDone) val = pointsDone;
+                      if (val < 1) val = 1; // ¡Asegura que el valor no baje de 1!
                       setPointsTotal(val);
                     }}
                     aria-label="Puntos totales editables"
@@ -932,9 +939,14 @@ export default function ProjectDetailsPage() {
                 </div>
               </div>
 
-              <div className="mt-1.5 text-cyan-300 font-semibold text-sm text-center w-[372px] ml-12">
-                Faltan {pointsTotal - pointsDone} puntos para completar el
-                proyecto
+              <div className="flex justify-center mt-3">
+                <div className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-4 shadow-[0_8px_32px_rgba(31,38,135,0.6)] w-fit min-w-[372px]">
+                  <span className="text-xl font-bold text-green-400 text-center">
+                    Falta {pointsTotal - pointsDone}{" "}
+                    {pointsTotal - pointsDone === 1 ? "punto" : "puntos"} para
+                    completar el proyecto
+                  </span>
+                </div>
               </div>
             </div>
 
