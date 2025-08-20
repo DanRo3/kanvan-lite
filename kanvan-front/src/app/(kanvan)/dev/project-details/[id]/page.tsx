@@ -454,7 +454,7 @@ export default function ProjectDetailsPage() {
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-center gap-1">
                   <span>Puntos obtenidos</span>
-                  <span className="w-14 text-lg font-bold text-right text-[#e0e0e0]">
+                  <span className="w-20 text-lg font-bold text-right text-[#e0e0e0]">
                     {projectData.pointsUsed ?? 0}
                   </span>
                 </div>
@@ -463,7 +463,7 @@ export default function ProjectDetailsPage() {
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <span>Puntos totales</span>
-                  <span className="w-14 text-lg font-bold text-right text-[#e0e0e0]">
+                  <span className="w-20 text-lg font-bold text-right text-[#e0e0e0]">
                     {projectData.pointsBudget ?? 0}
                   </span>
                 </div>

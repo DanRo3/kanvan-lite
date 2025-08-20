@@ -1,4 +1,5 @@
 import React from "react";
+import ProgressBar from "./ProgressBar"; // Importa el nuevo componente
 
 type Status = "Completado" | "En_Progreso" | "Planeado";
 
@@ -25,12 +26,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   dueDate,
   href,
 }) => {
-  console.log(`La url es ${href}`);
   const statusStyle = statusColors[status];
+  const progress = (pointsDone / pointsTotal) * 100;
 
   const dueDateObj =
     dueDate && typeof dueDate === "string" ? new Date(dueDate) : dueDate;
-
   const isValidDate =
     dueDateObj instanceof Date && !isNaN(dueDateObj.getTime());
 
@@ -51,6 +51,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       <div className="font-medium text-base">
         {pointsDone} / {pointsTotal} puntos realizados
       </div>
+
+      <ProgressBar progress={progress} />
+
       <div className="text-sm text-gray-400">
         Fecha de entrega:{" "}
         {isValidDate ? dueDateObj!.toLocaleDateString() : "Sin fecha definida"}

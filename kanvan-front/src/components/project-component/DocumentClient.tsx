@@ -69,6 +69,7 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -147,22 +148,42 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
 
   // Exportar a PDF (función sin cambios)
   const exportToPdf = async () => {
-    if (!contentRef.current) return;
-    const { default: html2pdf } = await import("html2pdf.js");
-    const options = {
-      margin: 0.5,
-      filename: `${projectData.projectName.replace(
-        /\s+/g,
-        "_"
-      )}_Informe_Progreso.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-    };
-    html2pdf().set(options).from(contentRef.current).save();
-  };
+    if (!contentRef.current || isExporting) {
+      return;
+    }
 
+    setIsExporting(true);
+
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(contentRef.current, {
+        useCORS: true,
+        scale: 2,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "in",
+        format: "letter",
+      });
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, "JPEG", 0.5, 0.5, pdfWidth, pdfHeight);
+      pdf.save(
+        `${projectData.projectName.replace(/\s+/g, "_")}_Informe_Progreso.pdf`
+      );
+    } catch (error) {
+      console.error("Error al exportar el PDF:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
   return (
     <main
       className="max-w-5xl mx-auto p-8 font-sans text-[#e0e0e0] bg-[#121212] min-h-screen relative"
@@ -170,19 +191,24 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
     >
       <button
         onClick={exportToPdf}
-        className="
-          absolute top-8 right-8
-          bg-green-600 hover:bg-green-700
-          text-white font-semibold
-          px-4 py-2 rounded-md
-          transition-colors duration-300 ease-in-out
-          z-20
-          select-none
-          shadow-lg
-        "
-        aria-label="Exportar informe a PDF"
+        disabled={isExporting} // Deshabilita el botón mientras se exporta
+        className={`
+        absolute top-8 right-8
+        text-white font-semibold
+        px-4 py-2 rounded-md
+        transition-colors duration-300 ease-in-out
+        z-20
+        select-none
+        shadow-lg
+        ${
+          isExporting
+            ? "bg-gray-500 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
+        }
+      `}
+        aria-label={isExporting ? "Exportando..." : "Exportar informe a PDF"}
       >
-        Exportar
+        {isExporting ? "Exportando..." : "Exportar"}
       </button>
 
       <div ref={contentRef}>

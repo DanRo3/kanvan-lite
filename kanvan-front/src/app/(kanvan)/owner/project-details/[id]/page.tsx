@@ -877,7 +877,7 @@ export default function ProjectDetailsPage() {
                       setPointsDone(val);
                     }}
                     aria-label="Puntos obtenidos editables"
-                    className="w-14 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
+                    className="w-20 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
                   />
                 </div>
                 <div className="font-bold text-lg text-gray-400 select-none pb-6">
@@ -897,7 +897,7 @@ export default function ProjectDetailsPage() {
                       setPointsTotal(val);
                     }}
                     aria-label="Puntos totales editables"
-                    className="w-14 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
+                    className="w-20 text-lg font-bold text-right border border-green-400 rounded-lg bg-transparent text-[#e0e0e0] px-1.5 py-0.5 cursor-text outline-none"
                   />
                 </div>
               </div>

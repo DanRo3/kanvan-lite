@@ -54,7 +54,11 @@ export default function ProjectsPage() {
       try {
         const data = await getAllProjects();
         const mapped = mapProjectsToCards(data);
-        setProjects(mapped);
+        const sortedProjects = mapped.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+
+        setProjects(sortedProjects);
       } catch (error) {
         console.error("Error cargando proyectos:", error);
       }

@@ -22,9 +22,12 @@ const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
   const deployedTasks = tasks.filter((t) => t.status === "DEPLOYED").length;
   const totalTasks = tasks.length;
 
-  const devPercent = (completedTasks + deployedTasks / totalTasks) * 100;
-  const deployedPercent = (deployedTasks / totalTasks) * 100;
-  const projectPercent = (pointsUsed / pointsBudget) * 100;
+  const devPercent = (
+    (completedTasks + deployedTasks / totalTasks) *
+    100
+  ).toFixed(2);
+  const deployedPercent = ((deployedTasks / totalTasks) * 100).toFixed(2);
+  const projectPercent = ((pointsUsed / pointsBudget) * 100).toFixed(2);
 
   return (
     <section
