@@ -10,9 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Redefine los colores que puedan estar causando el problema con un formato seguro
-        // Por ejemplo, si un plugin usa `oklch`, puedes forzarlo a usar `rgb`
-        "your-color-name": "rgb(100, 50, 200)",
+        "color-fondo": "rgb(var(--color-fondo-rgb) / <alpha-value>)",
+        "color-texto": "rgb(var(--color-texto-rgb) / <alpha-value>)",
       },
     },
   },

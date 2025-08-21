@@ -146,38 +146,393 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
   const formattedDaysRemaining =
     daysRemaining > 0 ? `${daysRemaining} días` : "Finalizado";
 
-  // Exportar a PDF (función sin cambios)
   const exportToPdf = async () => {
-    if (!contentRef.current || isExporting) {
+    if (!projectData || isExporting) {
       return;
     }
 
     setIsExporting(true);
 
     try {
-      const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF();
+      let y = 10; // Posición vertical inicial
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 20;
 
-      const canvas = await html2canvas(contentRef.current, {
-        useCORS: true,
-        scale: 2,
-      });
+      // Función para verificar y añadir una nueva página si es necesario
+      const checkPage = (heightNeeded) => {
+        if (y + heightNeeded > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+      };
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.98);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "in",
-        format: "letter",
-      });
+      // Función para trazar una línea separadora
+      const drawSeparator = (startY) => {
+        doc.setLineWidth(0.5);
+        doc.setDrawColor("#D3D3D3"); // Gris claro
+        doc.line(10, startY, 200, startY);
+        y = startY + 5;
+      };
 
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      // ---
+      // Mapeo de estados de tareas y proyectos
+      // ---
+      const projectStatusMap = {
+        PLANNED: "Planificado",
+        IN_PROGRESS: "En Progreso",
+        COMPLETED: "Completado",
+      };
 
-      pdf.addImage(imgData, "JPEG", 0.5, 0.5, pdfWidth, pdfHeight);
-      pdf.save(
-        `${projectData.projectName.replace(/\s+/g, "_")}_Informe_Progreso.pdf`
+      const recentActivityStatusMap = {
+        PENDING: "Planificada",
+        IN_PROGRESS: "En Progreso",
+        COMPLETED: "Completada",
+        DEPLOYED: "Desplegada",
+      };
+
+      // ========================
+      // 1. Información General
+      // ========================
+      doc.setFontSize(24);
+      doc.setFont(undefined, "bold");
+      doc.text(`Informe de Progreso`, 10, y);
+      y += 10;
+      doc.setFontSize(18);
+      doc.setFont(undefined, "normal");
+      const splitProjectName = doc.splitTextToSize(
+        projectData.projectName,
+        180
       );
+      doc.text(splitProjectName, 10, y);
+      y += splitProjectName.length * 7 + 10;
+
+      const translatedStatus =
+        projectStatusMap[projectData.status] || projectData.status;
+      let statusColor = "#000000"; // Color por defecto
+      if (projectData.status === "COMPLETED") {
+        statusColor = "#28a745"; // Verde
+      } else if (projectData.status === "IN_PROGRESS") {
+        statusColor = "#ffc107"; // Amarillo
+      } else if (projectData.status === "PLANNED") {
+        statusColor = "#dc3545"; // Rojo
+      }
+
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text("Estado:", 10, y);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(statusColor);
+      doc.text(translatedStatus, 32, y);
+      doc.setTextColor("#000000"); // Negro (reset)
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Fecha Límite:", 10, y);
+      doc.setFont(undefined, "normal");
+      doc.text(formattedDueDate, 45, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Días Restantes:", 10, y);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor("#ffc107"); // Amarillo
+      doc.text(formattedDaysRemaining, 50, y);
+      doc.setTextColor("#000000"); // Negro (reset)
+      y += 15;
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("Descripción del Proyecto:", 10, y);
+      y += 7;
+      doc.setFont(undefined, "normal");
+      const splitDescription = doc.splitTextToSize(
+        projectData.description || "",
+        180
+      );
+      doc.text(splitDescription, 10, y);
+      y += splitDescription.length * 7 + 10;
+      drawSeparator(y);
+
+      // ========================
+      // 2. Resumen de Puntos
+      // ========================
+      checkPage(50);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Resumen de Puntos", 10, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+
+      doc.text("Puntos Usados:", 10, y);
+      doc.setFont(undefined, "bold");
+      doc.setTextColor("#28a745"); // Verde
+      doc.text(projectData.pointsUsed.toString(), 42, y);
+      doc.setTextColor("#000000"); // Negro (reset)
+      y += 7;
+
+      doc.setFont(undefined, "normal");
+      doc.text("Puntos Presupuestados:", 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(projectData.pointsBudget.toString(), 58, y);
+      doc.setFont(undefined, "normal");
+      y += 15;
+      drawSeparator(y);
+
+      // ========================
+      // 3. Métricas de Progreso
+      // ========================
+      checkPage(50);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Progreso General del Proyecto", 10, y);
+      y += 10;
+
+      const completedTasks = projectData.tasks.filter(
+        (t) => t.status === "COMPLETED"
+      ).length;
+      const deployedTasks = projectData.tasks.filter(
+        (t) => t.status === "DEPLOYED"
+      ).length;
+      const totalTasks = projectData.tasks.length;
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      doc.text(`Tareas Completadas:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(`${deployedTasks} / ${totalTasks}`, 52, y);
+      doc.setFont(undefined, "normal");
+      y += 7;
+
+      const devPercent =
+        totalTasks > 0
+          ? (((completedTasks + deployedTasks) / totalTasks) * 100).toFixed(2)
+          : "0.00";
+      doc.text(`Desarrollado:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(`${devPercent}%`, 38, y);
+      doc.setFont(undefined, "normal");
+      y += 7;
+
+      const deployedPercent =
+        totalTasks > 0
+          ? ((deployedTasks / totalTasks) * 100).toFixed(2)
+          : "0.00";
+      doc.text(`Desplegado:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(`${deployedPercent}%`, 37, y);
+      doc.setFont(undefined, "normal");
+      y += 7;
+
+      const projectPercent =
+        projectData.pointsBudget > 0
+          ? ((projectData.pointsUsed / projectData.pointsBudget) * 100).toFixed(
+              2
+            )
+          : "0.00";
+      doc.text(`% Proyecto Completado:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(`${projectPercent}%`, 58, y);
+      doc.setFont(undefined, "normal");
+      y += 15;
+      drawSeparator(y);
+
+      // ========================
+      // 4. Tabla de Resumen de Tareas
+      // ========================
+      checkPage(50);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Resumen de Tareas", 10, y);
+      y += 10;
+
+      const taskStatusMap = {
+        PENDING: "Planificadas",
+        IN_PROGRESS: "En Progreso",
+        COMPLETED: "Completadas",
+        DEPLOYED: "Desplegadas",
+      };
+
+      const taskCounts = Object.keys(taskStatusMap).reduce((acc, status) => {
+        acc[status] = projectData.tasks.filter(
+          (t) => t.status === status
+        ).length;
+        return acc;
+      }, {});
+
+      const summaryHeaders = ["Tareas", "Cantidad"];
+      const summaryColWidths = [120, 40];
+      const summaryRowHeight = 10;
+      const startX = 10;
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, "bold");
+      let summaryX = startX;
+      summaryHeaders.forEach((header, index) => {
+        doc.text(header, summaryX, y);
+        summaryX += summaryColWidths[index];
+      });
+      doc.line(
+        startX,
+        y + 2,
+        startX + summaryColWidths.reduce((sum, width) => sum + width, 0),
+        y + 2
+      );
+      y += summaryRowHeight;
+      doc.setFont(undefined, "normal");
+
+      Object.entries(taskStatusMap).forEach(([status, label]) => {
+        checkPage(summaryRowHeight);
+        summaryX = startX;
+        doc.text(label, summaryX, y);
+        summaryX += summaryColWidths[0];
+        doc.text(taskCounts[status].toString(), summaryX, y, {
+          align: "right",
+        });
+        y += summaryRowHeight;
+      });
+
+      doc.setFont(undefined, "bold");
+      checkPage(summaryRowHeight);
+      doc.text("Totales", startX, y);
+      doc.text(totalTasks.toString(), startX + summaryColWidths[0], y, {
+        align: "right",
+      });
+      y += summaryRowHeight;
+      y += 5;
+      drawSeparator(y);
+
+      // ========================
+      // 5. Tareas del Proyecto
+      // ========================
+      checkPage(50);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Tareas del Proyecto", 10, y);
+      y += 10;
+
+      const allSortedTasks = [...projectData.tasks].sort((a, b) => {
+        const dateA = new Date(a.fechaFinalizacion);
+        const dateB = new Date(b.fechaFinalizacion);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      if (allSortedTasks.length > 0) {
+        doc.setFontSize(10);
+        doc.setFont(undefined, "bold");
+        let recentX = startX;
+        const recentHeaders = ["Título", "Estado", "Finalización"];
+        const recentColWidths = [120, 30, 40];
+        recentHeaders.forEach((header, index) => {
+          doc.text(header, recentX, y);
+          recentX += recentColWidths[index];
+        });
+        doc.line(
+          startX,
+          y + 2,
+          startX + recentColWidths.reduce((sum, width) => sum + width, 0),
+          y + 2
+        );
+        y += 10;
+
+        doc.setFont(undefined, "normal");
+        allSortedTasks.forEach((task) => {
+          const titleLines = doc.splitTextToSize(
+            task.title,
+            recentColWidths[0] - 5
+          );
+          const taskHeight = titleLines.length * 7;
+          checkPage(taskHeight + 3);
+
+          let currentY = y;
+          recentX = startX;
+          doc.text(titleLines, recentX, currentY);
+          recentX += recentColWidths[0];
+          const displayStatus =
+            recentActivityStatusMap[task.status.toUpperCase()] || task.status;
+          doc.text(displayStatus, recentX, currentY);
+          recentX += recentColWidths[1];
+          doc.text(
+            format(new Date(task.fechaFinalizacion), "dd/MM/yyyy"),
+            recentX,
+            currentY
+          );
+          y += taskHeight + 3;
+        });
+      } else {
+        checkPage(10);
+        doc.setFont(undefined, "italic");
+        doc.setFontSize(12);
+        doc.text("No hay tareas registradas.", 10, y);
+        y += 10;
+      }
+
+      y += 5;
+      drawSeparator(y);
+
+      // ========================
+      // 6. Métricas de Calidad
+      // ========================
+      checkPage(50);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Métricas de Calidad", 10, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+
+      doc.text(`Bugs Críticos:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.setTextColor("#dc3545"); // Rojo
+      doc.text(projectData.criticalBugs.toString(), 38, y);
+      doc.setTextColor("#000000"); // Negro (reset)
+      y += 7;
+
+      doc.setFont(undefined, "normal");
+      doc.text(`Total de Bugs:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(projectData.totalBugs.toString(), 39, y);
+      doc.setFont(undefined, "normal");
+      y += 7;
+
+      doc.text(`Cobertura de Tests:`, 10, y);
+      doc.setFont(undefined, "bold");
+      doc.text(`${projectData.testsCoberage || "N/A"}`, 50, y);
+      doc.setFont(undefined, "normal");
+      y += 15;
+      drawSeparator(y);
+
+      // ========================
+      // 7. Riesgos
+      // ========================
+      checkPage(50);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text("Riesgos", 10, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.setFont(undefined, "normal");
+      if (projectData.risks && projectData.risks.length > 0) {
+        projectData.risks.forEach((risk) => {
+          const riskText = `• ${risk.name || "Descripción no disponible."}`;
+          const splitRisk = doc.splitTextToSize(riskText, 180);
+          checkPage(splitRisk.length * 7);
+          doc.text(splitRisk, 10, y);
+          y += splitRisk.length * 7;
+        });
+      } else {
+        checkPage(7);
+        doc.setFont(undefined, "italic");
+        doc.text("No se han registrado riesgos.", 10, y);
+        y += 7;
+      }
+
+      // ========================
+      // 8. Guardar el PDF
+      // ========================
+      doc.save(`${projectData.projectName}_Informe_Progreso.pdf`);
     } catch (error) {
       console.error("Error al exportar el PDF:", error);
     } finally {
