@@ -24,7 +24,7 @@ const ProjectProgressSummary: React.FC<ProjectProgressSummaryProps> = ({
 
   const devPercent =
     totalTasks > 0
-      ? ((completedTasks + deployedTasks / totalTasks) * 100).toFixed(2)
+      ? (((completedTasks + deployedTasks) / totalTasks) * 100).toFixed(2)
       : "0.00";
   const deployedPercent =
     totalTasks > 0 ? ((deployedTasks / totalTasks) * 100).toFixed(2) : "0.00";
