@@ -173,7 +173,7 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
         doc.setLineWidth(0.5);
         doc.setDrawColor("#D3D3D3"); // Gris claro
         doc.line(10, startY, 200, startY);
-        y = startY + 5;
+        y = startY + 10;
       };
 
       // ---
@@ -190,6 +190,26 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
         IN_PROGRESS: "En Progreso",
         COMPLETED: "Completada",
         DEPLOYED: "Desplegada",
+      };
+
+      const statusColors = {
+        PENDING: "#dc3545", // Rojo
+        IN_PROGRESS: "#ffc107", // Amarillo
+        COMPLETED: "#28a745", // Verde
+        DEPLOYED: "#17a2b8", // Azul
+      };
+
+      const riskStatusMap = {
+        ACTIVE: "Activo",
+        MONITORING: "En Monitoreo",
+        RESOLVED: "Resuelto",
+      };
+
+      // Mapeo de SCOPE de riesgos
+      const riskScopeMap = {
+        LOW: { text: "Bajo", color: "#28a745" }, // Verde
+        NORMAL: { text: "Normal", color: "#ffc107" }, // Amarillo
+        CRITICAL: { text: "Crítico", color: "#dc3545" }, // Rojo
       };
 
       // ========================
@@ -367,40 +387,50 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
       const summaryRowHeight = 10;
       const startX = 10;
 
+      // Encabezados con mejor estilo
       doc.setFontSize(10);
       doc.setFont(undefined, "bold");
-      let summaryX = startX;
-      summaryHeaders.forEach((header, index) => {
-        doc.text(header, summaryX, y);
-        summaryX += summaryColWidths[index];
-      });
-      doc.line(
+      doc.setFillColor(240, 240, 240); // Fondo gris claro
+      doc.rect(
         startX,
-        y + 2,
-        startX + summaryColWidths.reduce((sum, width) => sum + width, 0),
-        y + 2
+        y,
+        summaryColWidths[0] + summaryColWidths[1],
+        summaryRowHeight,
+        "F"
       );
+      doc.text(summaryHeaders[0], startX + 5, y + 6);
+      doc.text(summaryHeaders[1], startX + summaryColWidths[0] + 5, y + 6);
       y += summaryRowHeight;
       doc.setFont(undefined, "normal");
 
       Object.entries(taskStatusMap).forEach(([status, label]) => {
         checkPage(summaryRowHeight);
-        summaryX = startX;
-        doc.text(label, summaryX, y);
-        summaryX += summaryColWidths[0];
-        doc.text(taskCounts[status].toString(), summaryX, y, {
-          align: "right",
-        });
+        doc.setDrawColor("#D3D3D3");
+        doc.line(
+          startX,
+          y,
+          startX + summaryColWidths[0] + summaryColWidths[1],
+          y
+        ); // Línea horizontal
+
+        doc.setTextColor("#000000");
+        doc.text(label, startX + 5, y + 6);
+        doc.text(
+          taskCounts[status].toString(),
+          startX + summaryColWidths[0] + 5,
+          y + 6
+        );
         y += summaryRowHeight;
       });
 
-      doc.setFont(undefined, "bold");
-      checkPage(summaryRowHeight);
-      doc.text("Totales", startX, y);
-      doc.text(totalTasks.toString(), startX + summaryColWidths[0], y, {
-        align: "right",
-      });
-      y += summaryRowHeight;
+      doc.setDrawColor("#D3D3D3");
+      doc.line(
+        startX,
+        y,
+        startX + summaryColWidths[0] + summaryColWidths[1],
+        y
+      );
+
       y += 5;
       drawSeparator(y);
 
@@ -422,20 +452,25 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
       if (allSortedTasks.length > 0) {
         doc.setFontSize(10);
         doc.setFont(undefined, "bold");
+        doc.setFillColor(240, 240, 240); // Fondo gris claro para encabezado
+        const headerY = y;
+        const recentColWidths = [120, 30, 40];
+        doc.rect(
+          startX,
+          headerY,
+          recentColWidths.reduce((sum, w) => sum + w, 0),
+          8,
+          "F"
+        );
+
         let recentX = startX;
         const recentHeaders = ["Título", "Estado", "Finalización"];
-        const recentColWidths = [120, 30, 40];
+
         recentHeaders.forEach((header, index) => {
-          doc.text(header, recentX, y);
+          doc.text(header, recentX + 2, y + 6); // Relleno de 2
           recentX += recentColWidths[index];
         });
-        doc.line(
-          startX,
-          y + 2,
-          startX + recentColWidths.reduce((sum, width) => sum + width, 0),
-          y + 2
-        );
-        y += 10;
+        y += 8;
 
         doc.setFont(undefined, "normal");
         allSortedTasks.forEach((task) => {
@@ -443,24 +478,44 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
             task.title,
             recentColWidths[0] - 5
           );
-          const taskHeight = titleLines.length * 7;
+          const taskHeight = Math.max(10, titleLines.length * 7);
           checkPage(taskHeight + 3);
+
+          doc.setDrawColor("#D3D3D3");
+          doc.line(
+            startX,
+            y,
+            startX + recentColWidths.reduce((sum, w) => sum + w, 0),
+            y
+          ); // Línea horizontal
 
           let currentY = y;
           recentX = startX;
-          doc.text(titleLines, recentX, currentY);
+          doc.text(titleLines, recentX + 2, currentY + 6); // Relleno de 2
           recentX += recentColWidths[0];
+
+          doc.setTextColor(
+            statusColors[task.status.toUpperCase()] || "#000000"
+          );
           const displayStatus =
             recentActivityStatusMap[task.status.toUpperCase()] || task.status;
-          doc.text(displayStatus, recentX, currentY);
+          doc.text(displayStatus, recentX + 2, currentY + 6); // Relleno de 2
           recentX += recentColWidths[1];
+          doc.setTextColor("#000000"); // Resetear color
           doc.text(
             format(new Date(task.fechaFinalizacion), "dd/MM/yyyy"),
-            recentX,
-            currentY
+            recentX + 2,
+            currentY + 6 // Relleno de 2
           );
           y += taskHeight + 3;
         });
+        doc.setDrawColor("#D3D3D3");
+        doc.line(
+          startX,
+          y,
+          startX + recentColWidths.reduce((sum, w) => sum + w, 0),
+          y
+        );
       } else {
         checkPage(10);
         doc.setFont(undefined, "italic");
@@ -505,29 +560,86 @@ export default function DocumentClient({ publicId }: { publicId: string }) {
       drawSeparator(y);
 
       // ========================
-      // 7. Riesgos
+      // 7. Tabla de Riesgos
       // ========================
       checkPage(50);
       doc.setFontSize(16);
       doc.setFont(undefined, "bold");
-      doc.text("Riesgos", 10, y);
+      doc.text("Tabla de Riesgos", 10, y);
       y += 10;
-      doc.setFontSize(12);
-      doc.setFont(undefined, "normal");
+      const riskColWidths = [120, 50];
+      const riskHeaders = ["Riesgo", "Impacto"];
+
       if (projectData.risks && projectData.risks.length > 0) {
-        projectData.risks.forEach((risk) => {
-          const riskText = `• ${risk.name || "Descripción no disponible."}`;
-          const splitRisk = doc.splitTextToSize(riskText, 180);
-          checkPage(splitRisk.length * 7);
-          doc.text(splitRisk, 10, y);
-          y += splitRisk.length * 7;
+        doc.setFontSize(10);
+        doc.setFont(undefined, "bold");
+        doc.setFillColor(240, 240, 240); // Fondo gris claro
+        doc.rect(
+          startX,
+          y,
+          riskColWidths.reduce((sum, w) => sum + w, 0),
+          8,
+          "F"
+        );
+
+        let riskX = startX;
+        riskHeaders.forEach((header, index) => {
+          doc.text(header, riskX + 2, y + 6);
+          riskX += riskColWidths[index];
         });
+        y += 8;
+
+        doc.setFont(undefined, "normal");
+        projectData.risks.forEach((risk) => {
+          const riskNameLines = doc.splitTextToSize(
+            risk.name || "N/A",
+            riskColWidths[0] - 5
+          );
+          const riskHeight = Math.max(10, riskNameLines.length * 7);
+          checkPage(riskHeight + 3);
+
+          doc.setDrawColor("#D3D3D3");
+          doc.line(
+            startX,
+            y,
+            startX + riskColWidths.reduce((sum, w) => sum + w, 0),
+            y
+          );
+
+          let currentRiskY = y;
+          riskX = startX;
+          doc.text(riskNameLines, riskX + 2, currentRiskY + 6);
+          riskX += riskColWidths[0];
+
+          // Obtener el mapeo de scope y color
+          const scopeData = riskScopeMap[risk.scope.toUpperCase()] || {
+            text: risk.scope,
+            color: "#000000",
+          };
+
+          doc.setTextColor(scopeData.color);
+          doc.text(scopeData.text, riskX + 2, currentRiskY + 6);
+          doc.setTextColor("#000000"); // Resetear color
+
+          y += riskHeight + 3;
+        });
+        doc.setDrawColor("#D3D3D3");
+        doc.line(
+          startX,
+          y,
+          startX + riskColWidths.reduce((sum, w) => sum + w, 0),
+          y
+        );
       } else {
-        checkPage(7);
+        checkPage(10);
         doc.setFont(undefined, "italic");
+        doc.setFontSize(12);
         doc.text("No se han registrado riesgos.", 10, y);
-        y += 7;
+        y += 10;
       }
+
+      y += 5;
+      drawSeparator(y);
 
       // ========================
       // 8. Guardar el PDF
